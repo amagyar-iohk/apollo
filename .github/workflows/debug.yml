@@ -1,26 +1,7 @@
-name: Release
+name: Debug
 
 on:
   workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version to release (e.g., 1.2.3)'
-        required: true
-      release_swift:
-        description: 'Release Swift package?'
-        type: boolean
-        required: false
-        default: true
-      release_maven:
-        description: 'Release JVM & Android to Maven?'
-        type: boolean
-        required: false
-        default: true
-      release_ts:
-        description: 'Release TypeScript package?'
-        type: boolean
-        required: false
-        default: true
 
 permissions:
   contents: write
@@ -28,7 +9,7 @@ permissions:
 
 jobs:
   unified_release:
-    name: Unified Release (Swift/Maven/npm)
+    name: Debug
     runs-on: macos-latest
 
     steps:
@@ -50,7 +31,6 @@ jobs:
           xcode-version: '16.2'
 
       - name: Test variables
-        if: ${{ inputs.release_maven }}
         env:
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.HYP_BOT_GPG_PRIVATE }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.HYP_BOT_GPG_PASSWORD }}

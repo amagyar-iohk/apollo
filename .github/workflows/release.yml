@@ -118,7 +118,7 @@ jobs:
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.OSSRH_PASSWORD }}
           ORG_GRADLE_PROJECT_version: ${{ github.event.inputs.version }}
         run: |
-          ./gradlew publishAllPublicationsToMavenCentralRepository
+          ./gradlew publishToMavenCentral
 
       - name: Publish TypeScript package to npm
         if: ${{ inputs.release_ts }}

@@ -59,11 +59,3 @@ tasks.register<Delete>("deleteBuildFolder") {
 tasks.named("clean") {
     dependsOn("deleteBuildFolder")
 }
-
-tasks.withType<PublishToMavenRepository>().configureEach {
-    enabled = false
-}
-
-tasks.withType<PublishToMavenLocal>().configureEach {
-    enabled = false
-}

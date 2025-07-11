@@ -32,16 +32,14 @@ tasks.register<Exec>("buildSecp256k1Host") {
     outputs.dir(buildDirPath)
 }
 
-tasks.register<Exec>(
-    "buildSecp256k1MacosArm64"
-) {
+tasks.register<Exec>("buildSecp256k1Macos") {
     group = "native build"
     workingDir = projectDir
     commandLine(bash, "build-ios.sh", "macosx")
     inputs.file("build-ios.sh")
-    outputs.dir(buildDirPath.resolve("ios"))
+    outputs.dir(buildDirPath.resolve("ios/arm64-x86_x64-macosx"))
+    outputs.dir(buildDirPath.resolve("ios/x86_x64-macosx"))
     onlyIf { currentOs.isMacOsX }
-    onlyIf { outputMissing(buildDirPath.resolve("ios").resolve("arm64-x86_x64-macosx")) }
 }
 
 tasks.register<Exec>("buildSecp256k1Ios") {
@@ -70,7 +68,7 @@ tasks.register("buildSecp256k1") {
     if (currentOs.isMacOsX) {
         dependsOn("buildSecp256k1Ios")
         dependsOn("buildSecp256k1IosSimulatorArm64")
-        dependsOn("buildSecp256k1MacosArm64")
+        dependsOn("buildSecp256k1Macos")
     }
 }
 
@@ -83,12 +81,4 @@ tasks.register<Delete>("deleteNativeBuild") {
 // Attach clean to Gradle's standard clean
 tasks.named("clean") {
     dependsOn("deleteNativeBuild")
-}
-
-// Disable publishing for this module
-tasks.withType<PublishToMavenRepository>().configureEach {
-    enabled = false
-}
-tasks.withType<PublishToMavenLocal>().configureEach {
-    enabled = false
 }

@@ -7,10 +7,10 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.maven.publish)
     alias(libs.plugins.android.library)
 }
 
-project.description = "Identus Bip32 HD Keys in Ed25519"
 val appleBinaryName = "ApolloLibrary"
 val rustModuleDir = layout.projectDirectory.dir("rust-ed25519-bip32")
 val wrapperDir = rustModuleDir.dir("wrapper")
@@ -36,8 +36,10 @@ kotlin {
     jvm {
         withSourcesJar()
         compilations.all {
-            compilerOptions.configure {
-                jvmTarget.set(JvmTarget.JVM_17)
+            compileTaskProvider.configure {
+                compilerOptions {
+                    jvmTarget.set(JvmTarget.JVM_17)
+                }
             }
         }
 
@@ -75,6 +77,11 @@ kotlin {
             baseName = appleBinaryName
         }
     }
+    macosX64 {
+        binaries.framework {
+            baseName = appleBinaryName
+        }
+    }
     js(IR) {
         this.binaries.library()
         this.useCommonJs()
@@ -103,7 +110,7 @@ kotlin {
     compilerOptions {
         freeCompilerArgs.add("-opt-in=kotlin.js.ExperimentalJsExport")
     }
-
+    applyDefaultHierarchyTemplate()
     sourceSets {
         // Keep CommonMain without Uniffi-generated code
         val commonMain by getting {
@@ -113,23 +120,19 @@ kotlin {
                 implementation(libs.okio)
             }
         }
-
         val commonTest by getting {
             dependencies {
                 implementation(kotlin("test"))
             }
         }
-
         // New sourceSet for Uniffi-enabled targets
         val uniffiMain by creating {
             dependsOn(commonMain)
             kotlin.srcDir(layout.buildDirectory.dir("generated/commonMain/kotlin"))
         }
-
         val uniffiTest by creating {
             dependsOn(commonTest)
         }
-
         // JVM, Android, Native all use Uniffi
         val jvmMain by getting {
             dependsOn(uniffiMain)
@@ -147,7 +150,6 @@ kotlin {
                 implementation(libs.jna)
             }
         }
-
         val jvmTest by getting {
             dependsOn(uniffiTest)
             dependencies {
@@ -155,7 +157,6 @@ kotlin {
                 implementation(libs.junit)
             }
         }
-
         val androidMain by getting {
             dependsOn(uniffiMain)
             kotlin.srcDir(layout.buildDirectory.dir("generated/androidMain/kotlin"))
@@ -163,17 +164,10 @@ kotlin {
                 implementation("net.java.dev.jna:jna:5.13.0@aar")
             }
         }
-
-        val nativeMain by creating {
+        val nativeMain by getting {
             dependsOn(uniffiMain)
             kotlin.srcDir(layout.buildDirectory.dir("generated/nativeMain/kotlin"))
         }
-
-        val iosArm64Main by getting { dependsOn(nativeMain) }
-        val iosX64Main by getting { dependsOn(nativeMain) }
-        val iosSimulatorArm64Main by getting { dependsOn(nativeMain) }
-        val macosArm64Main by getting { dependsOn(nativeMain) }
-
         // JS Main is separate and does NOT depend on Uniffi code
         val jsMain by getting {
             dependencies {
@@ -200,7 +194,8 @@ kotlin {
                 "macosArm64" to "darwin-aarch64",
                 "iosX64" to "x86_64-apple-ios",
                 "iosArm64" to "aarch64-apple-ios",
-                "iosSimulatorArm64" to "aarch64-apple-ios-sim"
+                "iosSimulatorArm64" to "aarch64-apple-ios-sim",
+                "macosX64" to "darwin-x86-64"
             )
 
         val rustArch =
@@ -476,11 +471,11 @@ tasks.withType<org.jlleitschuh.gradle.ktlint.tasks.KtLintCheckTask>().configureE
 
 val tasksPublishingDisabled =
     listOf(
-        "publishIosX64PublicationToSonatypeRepository",
-        "publishIosArm64PublicationToSonatypeRepository",
-        "publishIosSimulatorArm64PublicationToSonatypeRepository",
-        "publishMacosArm64PublicationToSonatypeRepository",
-        "publishJsPublicationToSonatypeRepository",
+        "publishIosX64PublicationToMavenCentralRepository",
+        "publishIosArm64PublicationToMavenCentralRepository",
+        "publishIosSimulatorArm64PublicationToMavenCentralRepository",
+        "publishMacosArm64PublicationToMavenCentralRepository",
+        "publishJsPublicationToMavenCentralRepository",
         "publishIosX64PublicationToMavenCentralRepository",
         "publishIosArm64PublicationToMavenCentralRepository",
         "publishIosSimulatorArm64PublicationToMavenCentralRepository",
@@ -501,8 +496,8 @@ tasksPublishingDisabled.forEach {
     }
 }
 
-if (tasks.findByName("publishAndroidDebugPublicationToSonatypeRepository") != null) {
-    tasks.named("publishAndroidDebugPublicationToSonatypeRepository").configure {
+if (tasks.findByName("publishAndroidDebugPublicationToMavenCentralRepository") != null) {
+    tasks.named("publishAndroidDebugPublicationToMavenCentralRepository").configure {
         listOf(
             ":apollo:signJvmPublication",
             ":apollo:signMacosArm64Publication",
@@ -513,6 +508,97 @@ if (tasks.findByName("publishAndroidDebugPublicationToSonatypeRepository") != nu
             if (tasks.findByName(it) != null) {
                 dependsOn(it)
             }
+        }
+    }
+}
+
+mavenPublishing {
+    publishToMavenCentral()
+
+    // if (project.hasProperty("signingInMemoryKey")) {
+    signAllPublications()
+    // }
+
+    pom {
+        name.set("Identus bip32-ed25519")
+        description.set("Identus Bip32 HD Keys in Ed25519.")
+        url.set("https://hyperledger-identus.github.io/docs/")
+
+        organization {
+            name.set("Hyperledger")
+            url.set("https://www.hyperledger.org/")
+        }
+
+        licenses {
+            license {
+                name.set("The Apache License, Version 2.0")
+                url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
+            }
+        }
+
+        developers {
+            developer {
+                id.set("hamada147")
+                name.set("Ahmed Moussa")
+                email.set("ahmed.moussa@iohk.io")
+                organization.set("IOG")
+                roles.add("developer")
+            }
+            developer {
+                id.set("amagyar-iohk")
+                name.set("Allain Magyar")
+                email.set("allain.magyar@iohk.io")
+                organization.set("IOG")
+                roles.add("qc")
+            }
+            developer {
+                id.set("antonbaliasnikov")
+                name.set("Anton Baliasnikov")
+                email.set("anton.baliasnikov@iohk.io")
+                organization.set("IOG")
+                roles.add("qc")
+            }
+            developer {
+                id.set("elribonazo")
+                name.set("Javier Ribó")
+                email.set("javier.ribo@iohk.io")
+                organization.set("IOG")
+                roles.add("developer")
+            }
+            developer {
+                id.set("goncalo-frade-iohk")
+                name.set("Gonçalo Frade")
+                email.set("goncalo.frade@iohk.io")
+                organization.set("IOG")
+                roles.add("developer")
+            }
+            developer {
+                id.set("curtis-h")
+                name.set("Curtis Harding")
+                email.set("curtis.harding@iohk.io")
+                organization.set("IOG")
+                roles.add("developer")
+            }
+            developer {
+                id.set("cristianIOHK")
+                name.set("Cristian Gonzalez")
+                email.set("cristian.castro@iohk.io")
+                organization.set("IOG")
+                roles.add("developer")
+            }
+            developer {
+                id.set("yshyn-iohk")
+                name.set("Yurii Shynbuiev")
+                email.set("yurii.shynbuiev@iohk.io")
+                organization.set("IOG")
+                roles.add("developer")
+            }
+        }
+
+        scm {
+            connection.set("scm:git:git://git@github.com/hyperledger/identus-apollo.git")
+            developerConnection.set("scm:git:ssh://git@github.com/hyperledger/identus-apollo.git")
+            url.set("https://github.com/hyperledger/identus-apollo")
         }
     }
 }

@@ -1,16 +1,15 @@
 import dev.petuska.npm.publish.extension.domain.NpmAccess
 import org.gradle.kotlin.dsl.invoke
 import org.gradle.kotlin.dsl.withType
-import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import java.io.ByteArrayOutputStream
-import java.net.URL
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.android.library)
-    alias(libs.plugins.dokka)
+    // alias(libs.plugins.dokka)
+    alias(libs.plugins.maven.publish)
     alias(libs.plugins.npm.publish)
     alias(libs.plugins.swiftpackage)
 }
@@ -23,24 +22,22 @@ val minimumIosVersion = "15.0"
 val minimumMacOSVersion = "13.0"
 
 kotlin {
-    withSourcesJar(publish = false)
     jvm {
         withSourcesJar(publish = true)
         compilations.all {
-            compilerOptions.configure {
-                jvmTarget.set(JvmTarget.JVM_17)
+            compileTaskProvider.configure {
+                compilerOptions {
+                    jvmTarget.set(JvmTarget.JVM_17)
+                }
             }
         }
     }
-
     androidTarget {
         publishLibraryVariants("release", "debug")
     }
-
     iosArm64 {
         swiftCinterop("IOHKSecureRandomGeneration", name)
         swiftCinterop("IOHKCryptoKit", name)
-
         binaries.framework {
             baseName = appleBinaryName
         }
@@ -48,7 +45,6 @@ kotlin {
     iosX64 {
         swiftCinterop("IOHKSecureRandomGeneration", name)
         swiftCinterop("IOHKCryptoKit", name)
-
         binaries.framework {
             baseName = appleBinaryName
         }
@@ -56,7 +52,6 @@ kotlin {
     iosSimulatorArm64 {
         swiftCinterop("IOHKSecureRandomGeneration", name)
         swiftCinterop("IOHKCryptoKit", name)
-
         binaries.framework {
             baseName = appleBinaryName
         }
@@ -64,12 +59,17 @@ kotlin {
     macosArm64 {
         swiftCinterop("IOHKSecureRandomGeneration", name)
         swiftCinterop("IOHKCryptoKit", name)
-
         binaries.framework {
             baseName = appleBinaryName
         }
     }
-
+    macosX64 {
+        swiftCinterop("IOHKSecureRandomGeneration", name)
+        swiftCinterop("IOHKCryptoKit", name)
+        binaries.framework {
+            baseName = appleBinaryName
+        }
+    }
     js(IR) {
         outputModuleName = currentModuleName
         binaries.library()
@@ -111,15 +111,12 @@ kotlin {
                 implementation(libs.hash.hmac.sha2)
             }
         }
-
         val commonTest by getting {
             dependencies {
                 implementation(kotlin("test"))
             }
         }
-
         val androidMain by getting {
-            dependsOn(commonMain)
             dependencies {
                 api(libs.secp256k1.kmp)
                 implementation(libs.secp256k1.kmp.jvm)
@@ -132,7 +129,6 @@ kotlin {
         }
 
         val jvmMain by getting {
-            dependsOn(commonMain)
             dependencies {
                 api(libs.secp256k1.kmp)
                 implementation(libs.secp256k1.kmp.jvm)
@@ -142,14 +138,11 @@ kotlin {
                 implementation(libs.jna)
             }
         }
-
         val jvmTest by getting {
-            dependsOn(commonTest)
             dependencies {
                 implementation(libs.junit)
             }
         }
-
         val jsMain by getting {
             dependencies {
                 implementation(npm("elliptic", "6.6.1"))
@@ -164,21 +157,17 @@ kotlin {
                 implementation(libs.kotlin.node)
             }
         }
-
         val jsTest by getting {
             dependencies {
                 implementation(npm("url", "0.11.4"))
             }
         }
-
         val nativeMain by getting {
-            dependsOn(commonMain)
             dependencies {
                 implementation(project(":bip32-ed25519"))
                 implementation(project(":secp256k1-kmp"))
             }
         }
-
         all {
             languageSettings {
                 optIn("kotlin.RequiresOptIn")
@@ -225,44 +214,44 @@ android {
     }
 }
 
-tasks.withType<DokkaTask>().configureEach {
-    moduleName.set(currentModuleName)
-    moduleVersion.set(rootProject.version.toString())
-    description = "This is a Kotlin Multiplatform Library for cryptography"
-    dokkaSourceSets {
-        configureEach {
-            jdkVersion.set(17)
-            languageVersion.set("1.9.22")
-            apiVersion.set("2.0")
-            includes.from(
-                "docs/Apollo.md",
-                "docs/Base64.md",
-                "docs/SecureRandom.md"
-            )
-            sourceLink {
-                localDirectory.set(projectDir.resolve("src"))
-                remoteUrl.set(URL("https://github.com/hyperledger-identus/apollo/tree/main/src"))
-                remoteLineSuffix.set("#L")
-            }
-            externalDocumentationLink {
-                url.set(URL("https://kotlinlang.org/api/latest/jvm/stdlib/"))
-            }
-            externalDocumentationLink {
-                url.set(URL("https://kotlinlang.org/api/kotlinx.serialization/"))
-            }
-            externalDocumentationLink {
-                url.set(URL("https://api.ktor.io/"))
-            }
-            externalDocumentationLink {
-                url.set(URL("https://kotlinlang.org/api/kotlinx-datetime/"))
-                packageListUrl.set(URL("https://kotlinlang.org/api/kotlinx-datetime/"))
-            }
-            externalDocumentationLink {
-                url.set(URL("https://kotlinlang.org/api/kotlinx.coroutines/"))
-            }
-        }
-    }
-}
+// tasks.withType<DokkaTask>().configureEach {
+//     moduleName.set(currentModuleName)
+//     moduleVersion.set(rootProject.version.toString())
+//     description = "This is a Kotlin Multiplatform Library for cryptography"
+//     dokkaSourceSets {
+//         configureEach {
+//             jdkVersion.set(17)
+//             languageVersion.set("1.9.22")
+//             apiVersion.set("2.0")
+//             includes.from(
+//                 "docs/Apollo.md",
+//                 "docs/Base64.md",
+//                 "docs/SecureRandom.md"
+//             )
+//             sourceLink {
+//                 localDirectory.set(projectDir.resolve("src"))
+//                 remoteUrl.set(URI("https://github.com/hyperledger-identus/apollo/tree/main/src").toURL())
+//                 remoteLineSuffix.set("#L")
+//             }
+//             externalDocumentationLink {
+//                 url.set(URI("https://kotlinlang.org/api/latest/jvm/stdlib/").toURL())
+//             }
+//             externalDocumentationLink {
+//                 url.set(URI("https://kotlinlang.org/api/kotlinx.serialization/").toURL())
+//             }
+//             externalDocumentationLink {
+//                 url.set(URI("https://api.ktor.io/").toURL())
+//             }
+//             externalDocumentationLink {
+//                 url.set(URI("https://kotlinlang.org/api/kotlinx-datetime/").toURL())
+//                 packageListUrl.set(URI("https://kotlinlang.org/api/kotlinx-datetime/").toURL())
+//             }
+//             externalDocumentationLink {
+//                 url.set(URI("https://kotlinlang.org/api/kotlinx.coroutines/").toURL())
+//             }
+//         }
+//     }
+// }
 
 npmPublish {
     organization.set("hyperledger")
@@ -309,12 +298,10 @@ fun KotlinNativeTarget.swiftCinterop(library: String, platform: String) {
                     includeDirs.headerFilterOnly("$rootDir/iOSLibs/$library/build/Release-iphonesimulator/include/")
                     tasks[interopProcessingTaskName].dependsOn(":iOSLibs:build${library.replaceFirstChar(Char::uppercase)}Iphonesimulator")
                 }
-
                 "iosArm64" -> {
                     includeDirs.headerFilterOnly("$rootDir/iOSLibs/$library/build/Release-iphoneos/include/")
                     tasks[interopProcessingTaskName].dependsOn(":iOSLibs:build${library.replaceFirstChar(Char::uppercase)}Iphoneos")
                 }
-
                 "macosX64", "macosArm64" -> {
                     includeDirs.headerFilterOnly("$rootDir/iOSLibs/$library/build/Release/include/")
                     tasks[interopProcessingTaskName].dependsOn(":iOSLibs:build${library.replaceFirstChar(Char::uppercase)}Macosx")
@@ -335,32 +322,6 @@ val tasksRequiringRustLibs =
 tasksRequiringRustLibs.forEach {
     tasks.named(it).configure {
         dependsOn(":bip32-ed25519:prepareRustLibs")
-    }
-}
-
-val tasksPublishingDisabled =
-    listOf(
-        "publishIosX64PublicationToSonatypeRepository",
-        "publishIosArm64PublicationToSonatypeRepository",
-        "publishIosSimulatorArm64PublicationToSonatypeRepository",
-        "publishMacosArm64PublicationToSonatypeRepository",
-        "publishJsPublicationToSonatypeRepository",
-        "publishIosX64PublicationToMavenCentralRepository",
-        "publishIosArm64PublicationToMavenCentralRepository",
-        "publishIosSimulatorArm64PublicationToMavenCentralRepository",
-        "publishMacosArm64PublicationToMavenCentralRepository",
-        "publishJsPublicationToMavenCentralRepository",
-        "publishIosX64PublicationToMavenLocalRepository",
-        "publishIosArm64PublicationToMavenLocalRepository",
-        "publishIosSimulatorArm64PublicationToMavenLocalRepository",
-        "publishMacosArm64PublicationToMavenLocalRepository",
-        "publishJsPublicationToMavenLocalRepository"
-    )
-tasksPublishingDisabled.forEach {
-    if (tasks.findByName(it) != null) {
-        tasks.named(it).configure {
-            this.enabled = false
-        }
     }
 }
 
@@ -431,7 +392,98 @@ tasks.withType<Copy>().configureEach {
 }
 
 // Configure Dokka tasks uniformly
-tasks.withType<DokkaTask>().configureEach {
-    moduleName.set(currentModuleName)
-    moduleVersion.set(rootProject.version.toString())
+// tasks.withType<DokkaTask>().configureEach {
+//     moduleName.set(currentModuleName)
+//     moduleVersion.set(rootProject.version.toString())
+// }
+
+mavenPublishing {
+    publishToMavenCentral()
+
+    // if (project.hasProperty("signingInMemoryKey")) {
+    signAllPublications()
+    // }
+
+    pom {
+        name.set("Identus Apollo")
+        description.set("Collection of cryptographic methods used across Identus platform.")
+        url.set("https://hyperledger-identus.github.io/docs/")
+
+        organization {
+            name.set("Hyperledger")
+            url.set("https://www.hyperledger.org/")
+        }
+
+        licenses {
+            license {
+                name.set("The Apache License, Version 2.0")
+                url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
+            }
+        }
+
+        developers {
+            developer {
+                id.set("hamada147")
+                name.set("Ahmed Moussa")
+                email.set("ahmed.moussa@iohk.io")
+                organization.set("IOG")
+                roles.add("developer")
+            }
+            developer {
+                id.set("amagyar-iohk")
+                name.set("Allain Magyar")
+                email.set("allain.magyar@iohk.io")
+                organization.set("IOG")
+                roles.add("qc")
+            }
+            developer {
+                id.set("antonbaliasnikov")
+                name.set("Anton Baliasnikov")
+                email.set("anton.baliasnikov@iohk.io")
+                organization.set("IOG")
+                roles.add("qc")
+            }
+            developer {
+                id.set("elribonazo")
+                name.set("Javier Ribó")
+                email.set("javier.ribo@iohk.io")
+                organization.set("IOG")
+                roles.add("developer")
+            }
+            developer {
+                id.set("goncalo-frade-iohk")
+                name.set("Gonçalo Frade")
+                email.set("goncalo.frade@iohk.io")
+                organization.set("IOG")
+                roles.add("developer")
+            }
+            developer {
+                id.set("curtis-h")
+                name.set("Curtis Harding")
+                email.set("curtis.harding@iohk.io")
+                organization.set("IOG")
+                roles.add("developer")
+            }
+            developer {
+                id.set("cristianIOHK")
+                name.set("Cristian Gonzalez")
+                email.set("cristian.castro@iohk.io")
+                organization.set("IOG")
+                roles.add("developer")
+            }
+            developer {
+                id.set("yshyn-iohk")
+                name.set("Yurii Shynbuiev")
+                email.set("yurii.shynbuiev@iohk.io")
+                organization.set("IOG")
+                roles.add("developer")
+            }
+        }
+
+        scm {
+            connection.set("scm:git:git://git@github.com/hyperledger/identus-apollo.git")
+            developerConnection.set("scm:git:ssh://git@github.com/hyperledger/identus-apollo.git")
+            url.set("https://github.com/hyperledger/identus-apollo")
+        }
+    }
 }

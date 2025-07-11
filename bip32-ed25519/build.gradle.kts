@@ -496,22 +496,6 @@ tasksPublishingDisabled.forEach {
     }
 }
 
-if (tasks.findByName("publishAndroidDebugPublicationToMavenCentralRepository") != null) {
-    tasks.named("publishAndroidDebugPublicationToMavenCentralRepository").configure {
-        listOf(
-            ":apollo:signJvmPublication",
-            ":apollo:signMacosArm64Publication",
-            ":apollo:signKotlinMultiplatformPublication",
-            ":apollo:signJsPublication",
-            ":apollo:signIosX64Publication"
-        ).forEach {
-            if (tasks.findByName(it) != null) {
-                dependsOn(it)
-            }
-        }
-    }
-}
-
 mavenPublishing {
     publishToMavenCentral()
 

@@ -19,15 +19,15 @@ jobs:
           ARMORED_KEY: ${{ secrets.HYP_BOT_GPG_PRIVATE }}
           GPG_PASSWORD: ${{ secrets.HYP_BOT_GPG_PASSWORD }}
         run: |
-          # Import the GPG key from the secret
-          echo "$ARMORED_KEY" | gpg --import
+          # Import the GPG key using --batch to ensure it's non-interactive
+          echo "$ARMORED_KEY" | gpg --batch --import
           if [ $? -ne 0 ]; then
               echo "GPG key import failed."
               exit 1
           fi
 
           # Sign the file non-interactively
-          echo "$GPG_PASSWORD" | gpg --pinentry-mode loopback --passphrase-fd 0 --armor --detach-sign artifact.txt
+          echo "$GPG_PASSWORD" | gpg --batch --pinentry-mode loopback --passphrase-fd 0 --armor --detach-sign artifact.txt
           if [ $? -ne 0 ]; then
               echo "GPG signing failed."
               exit 1

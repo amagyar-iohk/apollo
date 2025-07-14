@@ -1,17 +1,16 @@
 import dev.petuska.npm.publish.extension.domain.NpmAccess
-import org.gradle.kotlin.dsl.invoke
-import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import java.io.ByteArrayOutputStream
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
-    alias(libs.plugins.android.library)
+    alias(libs.plugins.android.kotlin.multiplatform.library)
     // alias(libs.plugins.dokka)
     alias(libs.plugins.maven.publish)
     alias(libs.plugins.npm.publish)
     alias(libs.plugins.swiftpackage)
+    alias(libs.plugins.kover) apply false // https://github.com/Kotlin/kotlinx-kover/issues/747
 }
 
 project.description = "Collection of cryptographic methods used across Identus platform."
@@ -22,6 +21,10 @@ val minimumIosVersion = "15.0"
 val minimumMacOSVersion = "13.0"
 
 kotlin {
+    applyDefaultHierarchyTemplate()
+    compilerOptions {
+        freeCompilerArgs.addAll("-Xexpect-actual-classes",)
+    }
     jvm {
         withSourcesJar(publish = true)
         compilations.all {
@@ -32,8 +35,10 @@ kotlin {
             }
         }
     }
-    androidTarget {
-        publishLibraryVariants("release", "debug")
+    androidLibrary {
+        compileSdk = 34
+        minSdk = 21
+        namespace = "org.hyperledger.identus.apollo"
     }
     iosArm64 {
         swiftCinterop("IOHKSecureRandomGeneration", name)
@@ -97,76 +102,57 @@ kotlin {
         }
     }
 
-    applyDefaultHierarchyTemplate()
-
     sourceSets {
-        val commonMain by getting {
-            dependencies {
-                implementation(project(":bip32-ed25519"))
-                implementation(libs.serialization.json)
-                implementation(libs.bignum)
-                implementation(libs.okio)
-                implementation(libs.atomicfu)
-                implementation(libs.macs.hmac.sha2)
-                implementation(libs.hash.hmac.sha2)
-            }
+        commonMain.dependencies {
+            implementation(project(":bip32-ed25519"))
+            implementation(libs.serialization.json)
+            implementation(libs.bignum)
+            implementation(libs.okio)
+            implementation(libs.atomicfu)
+            implementation(libs.macs.hmac.sha2)
+            implementation(libs.hash.hmac.sha2)
         }
-        val commonTest by getting {
-            dependencies {
-                implementation(kotlin("test"))
-            }
+        commonTest.dependencies {
+            implementation(kotlin("test"))
         }
-        val androidMain by getting {
-            dependencies {
-                api(libs.secp256k1.kmp)
-                implementation(libs.secp256k1.kmp.jvm)
-                implementation(libs.secp256k1.kmp.android)
-                implementation(libs.guava)
-                implementation(libs.bouncycastle)
-                implementation(libs.bitcoinjcore)
-                implementation(libs.jna.android)
-            }
+        androidMain.dependencies {
+            api(libs.secp256k1.kmp)
+            implementation(libs.secp256k1.kmp.jvm)
+            implementation(libs.secp256k1.kmp.android)
+            implementation(libs.guava)
+            implementation(libs.bouncycastle)
+            implementation(libs.bitcoinjcore)
+            implementation(libs.jna.android)
         }
-
-        val jvmMain by getting {
-            dependencies {
-                api(libs.secp256k1.kmp)
-                implementation(libs.secp256k1.kmp.jvm)
-                implementation(libs.guava)
-                implementation(libs.bouncycastle)
-                implementation(libs.bitcoinjcore)
-                implementation(libs.jna)
-            }
+        jvmMain.dependencies {
+            api(libs.secp256k1.kmp)
+            implementation(libs.secp256k1.kmp.jvm)
+            implementation(libs.guava)
+            implementation(libs.bouncycastle)
+            implementation(libs.bitcoinjcore)
+            implementation(libs.jna)
         }
-        val jvmTest by getting {
-            dependencies {
-                implementation(libs.junit)
-            }
+        jvmTest.dependencies {
+            implementation(libs.junit)
         }
-        val jsMain by getting {
-            dependencies {
-                implementation(npm("elliptic", "6.6.1"))
-                implementation(npm("@types/elliptic", "6.4.18"))
-                implementation(npm("@noble/curves", "1.2.0"))
-                implementation(npm("@stablelib/x25519", "1.0.3"))
-                implementation(npm("hash.js", "1.1.7"))
-                implementation(npm("@noble/hashes", "1.3.1"))
-                implementation(npm("stream-browserify", "3.0.0"))
-                implementation(npm("buffer", "6.0.3"))
-                implementation(libs.kotlin.web)
-                implementation(libs.kotlin.node)
-            }
+        jsMain.dependencies {
+            implementation(npm("elliptic", "6.6.1"))
+            implementation(npm("@types/elliptic", "6.4.18"))
+            implementation(npm("@noble/curves", "1.2.0"))
+            implementation(npm("@stablelib/x25519", "1.0.3"))
+            implementation(npm("hash.js", "1.1.7"))
+            implementation(npm("@noble/hashes", "1.3.1"))
+            implementation(npm("stream-browserify", "3.0.0"))
+            implementation(npm("buffer", "6.0.3"))
+            implementation(libs.kotlin.web)
+            implementation(libs.kotlin.node)
         }
-        val jsTest by getting {
-            dependencies {
-                implementation(npm("url", "0.11.4"))
-            }
+        jsTest.dependencies {
+            implementation(npm("url", "0.11.4"))
         }
-        val nativeMain by getting {
-            dependencies {
-                implementation(project(":bip32-ed25519"))
-                implementation(project(":secp256k1-kmp"))
-            }
+        nativeMain.dependencies {
+            implementation(project(":bip32-ed25519"))
+            implementation(project(":secp256k1-kmp"))
         }
         all {
             languageSettings {
@@ -184,33 +170,6 @@ kotlin {
             macOS { v(minimumMacOSVersion) }
         }
         outputDirectory(File(rootDir, "apollo/build/packages/ApolloSwift"))
-    }
-}
-
-android {
-    namespace = "org.hyperledger.identus.apollo"
-    compileSdk = 34
-    sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
-
-    defaultConfig {
-        minSdk = 21
-    }
-
-    kotlin {
-        jvmToolchain(17)
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-
-    publishing {
-        multipleVariants {
-            withSourcesJar()
-            withJavadocJar()
-            allVariants()
-        }
     }
 }
 
@@ -298,10 +257,12 @@ fun KotlinNativeTarget.swiftCinterop(library: String, platform: String) {
                     includeDirs.headerFilterOnly("$rootDir/iOSLibs/$library/build/Release-iphonesimulator/include/")
                     tasks[interopProcessingTaskName].dependsOn(":iOSLibs:build${library.replaceFirstChar(Char::uppercase)}Iphonesimulator")
                 }
+
                 "iosArm64" -> {
                     includeDirs.headerFilterOnly("$rootDir/iOSLibs/$library/build/Release-iphoneos/include/")
                     tasks[interopProcessingTaskName].dependsOn(":iOSLibs:build${library.replaceFirstChar(Char::uppercase)}Iphoneos")
                 }
+
                 "macosX64", "macosArm64" -> {
                     includeDirs.headerFilterOnly("$rootDir/iOSLibs/$library/build/Release/include/")
                     tasks[interopProcessingTaskName].dependsOn(":iOSLibs:build${library.replaceFirstChar(Char::uppercase)}Macosx")
@@ -328,7 +289,8 @@ tasksRequiringRustLibs.forEach {
 val swiftPackageUpdateMinOSVersion =
     tasks.register("updateMinOSVersion") {
         group = "multiplatform-swift-package"
-        description = "Updates the minimum OS version of the plists in the xcframework, known issue of the KMP SwiftPackage plugin"
+        description =
+            "Updates the minimum OS version of the plists in the xcframework, known issue of the KMP SwiftPackage plugin"
         dependsOn("createSwiftPackage")
 
         val xcframeworkDir = layout.projectDirectory.file("build/packages/ApolloSwift/Apollo.xcframework").asFile
@@ -347,7 +309,7 @@ val swiftPackageUpdateMinOSVersion =
                 if (binaryFile.exists() && plistFile.exists()) {
                     val currentMinOS =
                         ByteArrayOutputStream().use { outputStream ->
-                            exec {
+                            providers.exec {
                                 commandLine("otool", "-l", binaryFile.absolutePath)
                                 standardOutput = outputStream
                             }
@@ -361,7 +323,7 @@ val swiftPackageUpdateMinOSVersion =
                                 ?: throw GradleException("Could not determine min OS version from binary")
                         }
 
-                    exec {
+                    providers.exec {
                         commandLine(
                             "/usr/libexec/PlistBuddy",
                             "-c",
@@ -384,6 +346,14 @@ afterEvaluate {
             finalizedBy(swiftPackageUpdateMinOSVersion)
         }
     }
+}
+
+tasks.named("jsBrowserProductionLibraryDistribution") {
+    dependsOn(":bip32-ed25519:copyWasmOutput")
+}
+
+tasks.named("jsNodeProductionLibraryDistribution") {
+    dependsOn(":bip32-ed25519:copyWasmOutput")
 }
 
 // Ensure copy tasks always include duplicates

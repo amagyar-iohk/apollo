@@ -1,11 +1,11 @@
 import org.jetbrains.kotlin.gradle.targets.js.yarn.YarnRootExtension
 
 plugins {
-    alias(libs.plugins.ktlint)
-    alias(libs.plugins.kover)
-    alias(libs.plugins.maven.publish) apply false
-    alias(libs.plugins.android.library) apply false
     alias(libs.plugins.kotlin.multiplatform) apply false
+    alias(libs.plugins.android.kotlin.multiplatform.library) apply false
+    alias(libs.plugins.maven.publish) apply false
+    alias(libs.plugins.kover)
+    alias(libs.plugins.ktlint)
 }
 
 group = "dev.allain"
@@ -26,7 +26,7 @@ allprojects {
 
 subprojects {
     apply(plugin = "org.jlleitschuh.gradle.ktlint")
-    apply(plugin = "org.jetbrains.kotlinx.kover")
+//    apply(plugin = "org.jetbrains.kotlinx.kover")
     ktlint {
         verbose.set(true)
         outputToConsole.set(true)
@@ -35,12 +35,12 @@ subprojects {
             exclude { it.file.path.contains("generated") }
         }
     }
-    koverReport {
-        filters {
-            excludes {
-                classes("org.hyperledger.identus.apollo.utils.bip39.wordlists.*")
-            }
-        }
+
+    tasks.matching {
+        it.name.startsWith("kover") && "Android" in it.name
+    }.configureEach {
+        logger.lifecycle("Kover Workaround: Disabling incompatible Android task -> ${this.name}")
+        enabled = false
     }
 }
 

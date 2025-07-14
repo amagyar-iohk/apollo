@@ -48,13 +48,11 @@ kotlin {
                     else -> "host/libsecp256k1.a"
                 }
 
-            compileTaskProvider.configure {
-                compilerOptions {
-                    freeCompilerArgs.addAll(
-                        "-include-binary",
-                        secp256k1Dir.resolve("native/build/$binaryPath").absolutePath
-                    )
-                }
+            compilerOptions.configure {
+                freeCompilerArgs.addAll(
+                    "-include-binary",
+                    secp256k1Dir.resolve("native/build/$binaryPath").absolutePath
+                )
             }
         }
     }

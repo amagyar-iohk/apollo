@@ -1,14 +1,12 @@
-import com.android.build.gradle.tasks.MergeSourceSetFolders
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.dsl.KotlinJsCompile
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackOutput
-import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.android.kotlin.multiplatform.library)
     alias(libs.plugins.maven.publish)
-    alias(libs.plugins.android.library)
+    alias(libs.plugins.kover) apply false // https://github.com/Kotlin/kotlinx-kover/issues/747
 }
 
 val appleBinaryName = "ApolloLibrary"
@@ -19,6 +17,59 @@ val wasmDir = rustModuleDir.dir("wasm")
 val wrapperOutputDir = wrapperDir.dir("build/generated")
 val wasmOutputDir = wasmDir.dir("build")
 val currentModuleName: String = "Bip32Ed25519"
+
+tasks.register<Copy>("copyGeneratedKotlin") {
+    group = "rust"
+    description = "Copies Rust-generated Kotlin wrappers."
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    dependsOn("buildRustWrapper")
+    dependsOn("prepareAndroidMainArtProfile")
+    from(wrapperOutputDir)
+    into(layout.buildDirectory.dir("generated"))
+}
+
+tasks.register<Copy>("copyNativeLibs") {
+    group = "rust"
+    description = "Copies native Rust binaries into architecture-specific subdirectories."
+    dependsOn("buildRustWrapper")
+
+    inputs.dir(wrapperDir.dir("target"))
+    outputs.dir(layout.buildDirectory.dir("generatedResources"))
+
+    // Set the main destination directory for the whole task here
+    into(layout.buildDirectory.dir("generatedResources"))
+
+    val archMapping = mapOf(
+        "x86_64-unknown-linux-gnu" to "linux-x86-64",
+        "aarch64-unknown-linux-gnu" to "linux-aarch64",
+        "aarch64-apple-darwin" to "darwin-aarch64",
+        "x86_64-apple-darwin" to "darwin-x86-64"
+    )
+    val targetDirs = mapOf(
+        "jvmMain" to listOf("x86_64-apple-darwin", "aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "x86_64-unknown-linux-gnu"),
+        "androidMain" to listOf("aarch64-linux-android", "x86_64-linux-android", "i686-linux-android", "armv7-linux-androideabi"),
+        "macosArm64Main" to listOf("aarch64-apple-darwin"),
+        "macosX64Main" to listOf("x86_64-apple-darwin"),
+        "iosX64Main" to listOf("x86_64-apple-ios"),
+        "iosSimulatorArm64Main" to listOf("aarch64-apple-ios-sim"),
+        "iosArm64Main" to listOf("aarch64-apple-ios")
+    )
+
+    // Now, configure each source and its relative destination
+    targetDirs.forEach { (target, architectures) ->
+        architectures.forEach { archDir ->
+            val outputArchDir = archMapping[archDir] ?: archDir
+            from(wrapperDir.dir("target/$archDir/release")) {
+                include("*.so", "*.dylib", "*.a")
+                // Use a simple string for the relative path
+                into("$target/libs/$outputArchDir")
+            }
+        }
+    }
+}
+
+val copyGeneratedKotlinProvider = tasks.named<Copy>("copyGeneratedKotlin")
+val copyNativeLibsProvider = tasks.named<Copy>("copyNativeLibs")
 
 val generatedResourcesDir =
     project.layout.buildDirectory.asFile
@@ -47,16 +98,15 @@ kotlin {
             useJUnitPlatform()
             systemProperty(
                 "jna.library.path",
-                generatedJvmLibsDirs.joinToString(File.pathSeparator) { it.absolutePath }
+                copyNativeLibsProvider.map { it.outputs.files.asPath }.get()
             )
-            jvmArgs("-Djava.library.path=${generatedJvmLibsDirs.joinToString(File.pathSeparator) { it.absolutePath }}")
         }
     }
-
-    androidTarget {
-        publishLibraryVariants("release", "debug")
+    androidLibrary {
+        namespace = "org.hyperledger.identus.apollo.bip32ed25519"
+        compileSdk = 34
+        minSdk = 21
     }
-
     iosArm64 {
         binaries.framework {
             baseName = appleBinaryName
@@ -112,40 +162,32 @@ kotlin {
     }
     applyDefaultHierarchyTemplate()
     sourceSets {
-        // Keep CommonMain without Uniffi-generated code
         val commonMain by getting {
+            // Keep CommonMain without Uniffi-generated code
             dependencies {
                 implementation(libs.atomicfu)
                 implementation(libs.serialization.json)
                 implementation(libs.okio)
             }
+            resources.srcDir(copyGeneratedKotlinProvider.map { it.destinationDir.resolve("commonMain/baselineProfiles") })
         }
         val commonTest by getting {
             dependencies {
                 implementation(kotlin("test"))
             }
         }
-        // New sourceSet for Uniffi-enabled targets
         val uniffiMain by creating {
+            // New sourceSet for Uniffi-enabled targets
             dependsOn(commonMain)
-            kotlin.srcDir(layout.buildDirectory.dir("generated/commonMain/kotlin"))
+            kotlin.srcDir(copyGeneratedKotlinProvider.map { it.destinationDir.resolve("commonMain/kotlin") })
         }
         val uniffiTest by creating {
             dependsOn(commonTest)
         }
-        // JVM, Android, Native all use Uniffi
         val jvmMain by getting {
             dependsOn(uniffiMain)
             kotlin.srcDir(layout.buildDirectory.dir("generated/jvmMain/kotlin"))
-
-            val generatedResources =
-                project.layout.buildDirectory.asFile
-                    .get()
-                    .resolve("generatedResources")
-                    .resolve("jvmMain")
-                    .resolve("libs")
-            resources.srcDir(generatedResources)
-
+            resources.srcDir(copyNativeLibsProvider.map { it.outputs.files.first().resolve("jvmMain/libs") })
             dependencies {
                 implementation(libs.jna)
             }
@@ -160,23 +202,23 @@ kotlin {
         val androidMain by getting {
             dependsOn(uniffiMain)
             kotlin.srcDir(layout.buildDirectory.dir("generated/androidMain/kotlin"))
+            resources.srcDir(copyGeneratedKotlinProvider.map { it.destinationDir.resolve("androidMain/baselineProfiles") })
             dependencies {
-                implementation("net.java.dev.jna:jna:5.13.0@aar")
+                implementation("net.java.dev.jna:jna:5.13.0")
             }
         }
         val nativeMain by getting {
             dependsOn(uniffiMain)
             kotlin.srcDir(layout.buildDirectory.dir("generated/nativeMain/kotlin"))
         }
-        // JS Main is separate and does NOT depend on Uniffi code
         val jsMain by getting {
+            // JS Main is separate and does NOT depend on Uniffi code
             dependencies {
                 implementation(npm("@noble/hashes", "1.3.1"))
                 implementation(libs.kotlin.web)
                 implementation(libs.kotlin.node)
             }
         }
-
         all {
             languageSettings {
                 optIn("kotlin.RequiresOptIn")
@@ -187,79 +229,24 @@ kotlin {
 
     targets.withType<org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget>().configureEach {
         val currentTarget = this.name
-
         // Mapping of Kotlin Native targets to their corresponding Rust architecture directories
-        val archMapping =
-            mapOf(
-                "macosArm64" to "darwin-aarch64",
-                "iosX64" to "x86_64-apple-ios",
-                "iosArm64" to "aarch64-apple-ios",
-                "iosSimulatorArm64" to "aarch64-apple-ios-sim",
-                "macosX64" to "darwin-x86-64"
-            )
-
-        val rustArch =
-            archMapping[currentTarget]
-                ?: error("Unsupported target $currentTarget for Rust arch mapping.")
-
+        val archMapping = mapOf(
+            "macosArm64" to "darwin-aarch64",
+            "iosX64" to "x86_64-apple-ios",
+            "iosArm64" to "aarch64-apple-ios",
+            "iosSimulatorArm64" to "aarch64-apple-ios-sim",
+            "macosX64" to "darwin-x86-64"
+        )
+        val rustArch = archMapping[currentTarget] ?: error("Unsupported target $currentTarget for Rust arch mapping.")
         compilations["main"].cinterops.create("ed25519_bip32_wrapper") {
-            val interopDir =
-                layout.buildDirectory
-                    .dir("generated/nativeInterop/cinterop/headers/ed25519_bip32_wrapper")
-                    .get()
-                    .asFile
-
-            val nativeLibDir =
-                layout.buildDirectory
-                    .dir("generatedResources/${currentTarget}Main/libs/$rustArch")
-                    .get()
-                    .asFile
-
+            val interopDir = layout.buildDirectory.dir("generated/nativeInterop/cinterop/headers/ed25519_bip32_wrapper").get().asFile
+            val nativeLibDir = copyNativeLibsProvider.get().outputs.files.first().resolve("${currentTarget}Main/libs/$rustArch")
             packageName("ed25519_bip32_wrapper.cinterop")
-
             header(interopDir.resolve("ed25519_bip32_wrapper.h"))
-
             defFile(project.file("src/nativeInterop/cinterop/ed25519_bip32_wrapper.def"))
-
             compilerOpts("-I${interopDir.absolutePath}")
-
-            extraOpts(
-                "-libraryPath",
-                nativeLibDir.absolutePath,
-                "-staticLibrary",
-                "libuniffi_ed25519_bip32_wrapper.a"
-            )
-
+            extraOpts("-libraryPath", nativeLibDir.absolutePath, "-staticLibrary", "libuniffi_ed25519_bip32_wrapper.a")
             tasks[interopProcessingTaskName].dependsOn("prepareRustLibs")
-        }
-    }
-}
-
-// === Group: Android Setup ===
-android {
-    namespace = "org.hyperledger.identus.apollo.bip32ed25519"
-    compileSdk = 34
-
-    defaultConfig {
-        minSdk = 21
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-
-    lint {
-        disable += "NewApi"
-        checkGeneratedSources = false
-        abortOnError = false
-    }
-
-    publishing {
-        multipleVariants {
-            withSourcesJar()
-            withJavadocJar()
-            allVariants()
         }
     }
 }
@@ -281,15 +268,6 @@ tasks.register<Exec>("buildRustWasm") {
     commandLine("./build_kotlin_library.sh")
     inputs.file(wasmDir.file("build_kotlin_library.sh"))
     outputs.dir(wasmOutputDir)
-}
-
-tasks.register<Copy>("copyGeneratedKotlin") {
-    group = "rust"
-    description = "Copies Rust-generated Kotlin wrappers."
-    duplicatesStrategy = DuplicatesStrategy.INCLUDE
-    dependsOn("buildRustWrapper")
-    from(wrapperOutputDir)
-    into(layout.buildDirectory.dir("generated"))
 }
 
 tasks.register<Copy>("copyWasmOutput") {
@@ -324,60 +302,6 @@ tasks.register<Copy>("copyWasmOutputTest") {
     )
 }
 
-tasks.register("copyNativeLibs") {
-    group = "rust"
-    description = "Copies native Rust binaries into architecture-specific subdirectories."
-    dependsOn("buildRustWrapper")
-
-    val archMapping =
-        mapOf(
-            "x86_64-unknown-linux-gnu" to "linux-x86-64",
-            "aarch64-unknown-linux-gnu" to "linux-aarch64",
-            "aarch64-apple-darwin" to "darwin-aarch64",
-            "x86_64-apple-darwin" to "darwin-x86-64"
-        )
-
-    val targetDirs =
-        mapOf(
-            "jvmMain" to
-                listOf(
-                    "x86_64-apple-darwin",
-                    "aarch64-apple-darwin",
-                    "aarch64-unknown-linux-gnu",
-                    "x86_64-unknown-linux-gnu"
-                ),
-            "androidMain" to
-                listOf(
-                    "aarch64-linux-android",
-                    "x86_64-linux-android",
-                    "i686-linux-android",
-                    "armv7-linux-androideabi"
-                ),
-            "macosArm64Main" to listOf("aarch64-apple-darwin"),
-            "macosX64Main" to listOf("x86_64-apple-darwin"),
-            "iosX64Main" to listOf("x86_64-apple-ios"),
-            "iosSimulatorArm64Main" to listOf("aarch64-apple-ios-sim"),
-            "iosArm64Main" to listOf("aarch64-apple-ios")
-        )
-
-    inputs.dir(wrapperDir.dir("target"))
-    outputs.dir(layout.buildDirectory.dir("generatedResources"))
-
-    doLast {
-        targetDirs.forEach { (target, architectures) ->
-            architectures.forEach { archDir ->
-                val outputArchDir = archMapping[archDir] ?: archDir
-                val outputDir = layout.buildDirectory.dir("generatedResources/$target/libs/$outputArchDir")
-                copy {
-                    from(wrapperDir.dir("target/$archDir/release"))
-                    into(outputDir)
-                    include("*.so", "*.dylib", "*.a")
-                }
-            }
-        }
-    }
-}
-
 tasks.register("prepareRustLibs") {
     group = "rust"
     description = "Aggregate task for building Rust wrappers and copying outputs."
@@ -389,111 +313,6 @@ tasks.register("prepareRustLibs") {
         "copyWasmOutputTest",
         "copyNativeLibs"
     )
-}
-
-// === Group: Main Lifecycle Tasks ===
-listOf(
-    "assemble",
-    "build",
-    "prepareAndroidMainArtProfile",
-    "jvmProcessResources",
-    "jsProcessResources",
-    "iosArm64SourcesJar",
-    "iosSimulatorArm64SourcesJar",
-    "iosX64SourcesJar",
-    "jvmSourcesJar",
-    "macosArm64SourcesJar"
-).forEach {
-    if (tasks.findByName(it) != null) {
-        tasks.named(it).configure {
-            dependsOn("prepareRustLibs", "copyGeneratedKotlin")
-        }
-    }
-}
-
-// === Group: Kotlin Compilation Tasks ===
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-    dependsOn("prepareRustLibs")
-}
-
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompileCommon>().configureEach {
-    dependsOn("prepareRustLibs")
-}
-
-tasks.withType<KotlinJsCompile>().configureEach {
-    dependsOn("prepareRustLibs")
-    compilerOptions {
-        target = "es2015"
-    }
-}
-
-tasks.withType<KotlinJvmCompile>().configureEach {
-    compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_17)
-        freeCompilerArgs.add("-opt-in=kotlin.ExperimentalStdlibApi")
-    }
-}
-
-// === Group: Packaging and Assets Tasks ===
-tasks
-    .matching {
-        val name = it.name
-        name.startsWith("package") &&
-            name.endsWith("Resources") ||
-            name.startsWith("package") &&
-            name.endsWith("Assets") ||
-            name.startsWith("extractDeepLinksForAar") ||
-            name.startsWith("packageDebugAssets") ||
-            name.startsWith("mergeReleaseResources")
-    }.configureEach {
-        dependsOn("prepareRustLibs")
-    }
-
-tasks.withType<MergeSourceSetFolders>().configureEach {
-    dependsOn("copyGeneratedKotlin")
-}
-
-tasks.withType<Jar>().configureEach {
-    dependsOn("copyGeneratedKotlin")
-}
-
-tasks.matching { it.name.endsWith("SourcesJar") }.configureEach {
-    dependsOn("copyGeneratedKotlin")
-}
-
-tasks.matching { it.name.endsWith("sourcesJar") }.configureEach {
-    dependsOn("copyGeneratedKotlin")
-}
-// === Group: KtLint Tasks ===
-tasks.withType<org.jlleitschuh.gradle.ktlint.tasks.KtLintCheckTask>().configureEach {
-    dependsOn("prepareRustLibs")
-}
-
-val tasksPublishingDisabled =
-    listOf(
-        "publishIosX64PublicationToMavenCentralRepository",
-        "publishIosArm64PublicationToMavenCentralRepository",
-        "publishIosSimulatorArm64PublicationToMavenCentralRepository",
-        "publishMacosArm64PublicationToMavenCentralRepository",
-        "publishJsPublicationToMavenCentralRepository",
-        "publishIosX64PublicationToMavenCentralRepository",
-        "publishIosArm64PublicationToMavenCentralRepository",
-        "publishIosSimulatorArm64PublicationToMavenCentralRepository",
-        "publishMacosArm64PublicationToMavenCentralRepository",
-        "publishJsPublicationToMavenCentralRepository",
-        "publishIosX64PublicationToMavenLocalRepository",
-        "publishIosArm64PublicationToMavenLocalRepository",
-        "publishIosSimulatorArm64PublicationToMavenLocalRepository",
-        "publishMacosArm64PublicationToMavenLocalRepository",
-        "publishJsPublicationToMavenLocalRepository"
-    )
-
-tasksPublishingDisabled.forEach {
-    if (tasks.findByName(it) != null) {
-        tasks.named(it).configure {
-            this.enabled = false
-        }
-    }
 }
 
 mavenPublishing {

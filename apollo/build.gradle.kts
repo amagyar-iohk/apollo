@@ -1,8 +1,12 @@
-// import dev.petuska.npm.publish.extension.domain.NpmAccess
+// import com.vanniktech.maven.publish.SonatypeHost
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
-import java.io.ByteArrayOutputStream
-import com.vanniktech.maven.publish.SonatypeHost
+
+// import dev.petuska.npm.publish.extension.domain.NpmAccess
+// import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+// import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
+// import java.io.ByteArrayOutputStream
+// import com.vanniktech.maven.publish.SonatypeHost
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
@@ -14,18 +18,18 @@ plugins {
     // alias(libs.plugins.kover) apply false // https://github.com/Kotlin/kotlinx-kover/issues/747
 }
 
-project.description = "Collection of cryptographic methods used across Identus platform."
+// project.description = "Collection of cryptographic methods used across Identus platform."
 
-val currentModuleName = "Apollo"
-val appleBinaryName = "ApolloLibrary"
-val minimumIosVersion = "15.0"
-val minimumMacOSVersion = "13.0"
+// val currentModuleName = "Apollo"
+// val appleBinaryName = "ApolloLibrary"
+// val minimumIosVersion = "15.0"
+// val minimumMacOSVersion = "13.0"
 
 kotlin {
-    applyDefaultHierarchyTemplate()
-    compilerOptions {
-        freeCompilerArgs.addAll("-Xexpect-actual-classes",)
-    }
+    // applyDefaultHierarchyTemplate()
+    // compilerOptions {
+    //     freeCompilerArgs.addAll("-Xexpect-actual-classes",)
+    // }
     jvm()
     androidLibrary {
         namespace = "dev.allain"
@@ -37,6 +41,18 @@ kotlin {
     iosSimulatorArm64()
     linuxX64()
 
+    sourceSets {
+        val commonMain by getting {
+            dependencies {
+                //put your multiplatform dependencies here
+            }
+        }
+        val commonTest by getting {
+            dependencies {
+                implementation(libs.kotlin.test)
+            }
+        }
+    }
     // jvm {
     //     withSourcesJar(publish = true)
     //     compilations.all {
@@ -114,65 +130,65 @@ kotlin {
     //     }
     // }
 
-    sourceSets {
-        commonMain.dependencies {
-            // implementation(project(":bip32-ed25519"))
-            implementation(libs.serialization.json)
-            implementation(libs.bignum)
-            implementation(libs.okio)
-            implementation(libs.atomicfu)
-            implementation(libs.macs.hmac.sha2)
-            implementation(libs.hash.hmac.sha2)
-        }
-        commonTest.dependencies {
-            implementation(kotlin("test"))
-        }
-        androidMain.dependencies {
-            // api(libs.secp256k1.kmp)
-            // implementation(libs.secp256k1.kmp.jvm)
-            // implementation(libs.secp256k1.kmp.android)
-            implementation(libs.guava)
-            implementation(libs.bouncycastle)
-            implementation(libs.bitcoinjcore)
-            implementation(libs.jna.android)
-        }
-        jvmMain.dependencies {
-            // api(libs.secp256k1.kmp)
-            // implementation(libs.secp256k1.kmp.jvm)
-            implementation(libs.guava)
-            implementation(libs.bouncycastle)
-            implementation(libs.bitcoinjcore)
-            implementation(libs.jna)
-        }
-        jvmTest.dependencies {
-            implementation(libs.junit)
-        }
-        // jsMain.dependencies {
-        //     implementation(npm("elliptic", "6.6.1"))
-        //     implementation(npm("@types/elliptic", "6.4.18"))
-        //     implementation(npm("@noble/curves", "1.2.0"))
-        //     implementation(npm("@stablelib/x25519", "1.0.3"))
-        //     implementation(npm("hash.js", "1.1.7"))
-        //     implementation(npm("@noble/hashes", "1.3.1"))
-        //     implementation(npm("stream-browserify", "3.0.0"))
-        //     implementation(npm("buffer", "6.0.3"))
-        //     implementation(libs.kotlin.web)
-        //     implementation(libs.kotlin.node)
-        // }
-        // jsTest.dependencies {
-        //     implementation(npm("url", "0.11.4"))
-        // }
-        // nativeMain.dependencies {
-        //     implementation(project(":bip32-ed25519"))
-        //     implementation(project(":secp256k1-kmp"))
-        // }
-        // all {
-        //     languageSettings {
-        //         optIn("kotlin.RequiresOptIn")
-        //         optIn("kotlinx.cinterop.ExperimentalForeignApi")
-        //     }
-        // }
-    }
+    // sourceSets {
+    //     commonMain.dependencies {
+    //         implementation(project(":bip32-ed25519"))
+    //         implementation(libs.serialization.json)
+    //         implementation(libs.bignum)
+    //         implementation(libs.okio)
+    //         implementation(libs.atomicfu)
+    //         implementation(libs.macs.hmac.sha2)
+    //         implementation(libs.hash.hmac.sha2)
+    //     }
+    //     commonTest.dependencies {
+    //         implementation(kotlin("test"))
+    //     }
+    //     androidMain.dependencies {
+    //         // api(libs.secp256k1.kmp)
+    //         // implementation(libs.secp256k1.kmp.jvm)
+    //         // implementation(libs.secp256k1.kmp.android)
+    //         implementation(libs.guava)
+    //         implementation(libs.bouncycastle)
+    //         implementation(libs.bitcoinjcore)
+    //         implementation(libs.jna.android)
+    //     }
+    //     jvmMain.dependencies {
+    //         api(libs.secp256k1.kmp)
+    //         implementation(libs.secp256k1.kmp.jvm)
+    //         implementation(libs.guava)
+    //         implementation(libs.bouncycastle)
+    //         implementation(libs.bitcoinjcore)
+    //         implementation(libs.jna)
+    //     }
+    //     jvmTest.dependencies {
+    //         implementation(libs.junit)
+    //     }
+    //     jsMain.dependencies {
+    //         implementation(npm("elliptic", "6.6.1"))
+    //         implementation(npm("@types/elliptic", "6.4.18"))
+    //         implementation(npm("@noble/curves", "1.2.0"))
+    //         implementation(npm("@stablelib/x25519", "1.0.3"))
+    //         implementation(npm("hash.js", "1.1.7"))
+    //         implementation(npm("@noble/hashes", "1.3.1"))
+    //         implementation(npm("stream-browserify", "3.0.0"))
+    //         implementation(npm("buffer", "6.0.3"))
+    //         implementation(libs.kotlin.web)
+    //         implementation(libs.kotlin.node)
+    //     }
+    //     jsTest.dependencies {
+    //         implementation(npm("url", "0.11.4"))
+    //     }
+    //     nativeMain.dependencies {
+    //         implementation(project(":bip32-ed25519"))
+    //         implementation(project(":secp256k1-kmp"))
+    //     }
+    //     all {
+    //         languageSettings {
+    //             optIn("kotlin.RequiresOptIn")
+    //             optIn("kotlinx.cinterop.ExperimentalForeignApi")
+    //         }
+    //     }
+    // }
 
     // multiplatformSwiftPackage {
     //     packageName("Apollo")
@@ -325,7 +341,7 @@ kotlin {
 // }
 
 mavenPublishing {
-    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
+    publishToMavenCentral()
 
     // if (project.hasProperty("signingInMemoryKey")) {
     signAllPublications()

@@ -1,4 +1,4 @@
-// import org.jetbrains.kotlin.gradle.targets.js.yarn.YarnRootExtension
+import org.jetbrains.kotlin.gradle.targets.js.yarn.YarnRootExtension
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform) apply false

@@ -116,7 +116,7 @@ jobs:
       - name: Publish JVM & Android to Maven Central
         if: ${{ inputs.release_maven }}
         run: |
-          ./gradlew publishToMavenCentral --no-configuration-cache
+          ./gradlew publishToMavenCentral --no-configuration-cache --debug
 
       - name: Publish TypeScript package to npm
         if: ${{ inputs.release_ts }}

@@ -2,6 +2,7 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import java.io.ByteArrayOutputStream
+import com.vanniktech.maven.publish.SonatypeHost
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
@@ -324,11 +325,13 @@ kotlin {
 // }
 
 mavenPublishing {
-    publishToMavenCentral()
+    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
 
     // if (project.hasProperty("signingInMemoryKey")) {
     signAllPublications()
     // }
+
+    coordinates(group.toString(), "apollo", version.toString())
 
     pom {
         name.set("Identus Apollo")

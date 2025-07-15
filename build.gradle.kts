@@ -35,13 +35,6 @@ subprojects {
             exclude { it.file.path.contains("generated") }
         }
     }
-
-    tasks.matching {
-        it.name.startsWith("kover") && "Android" in it.name
-    }.configureEach {
-        logger.lifecycle("Kover Workaround: Disabling incompatible Android task -> ${this.name}")
-        enabled = false
-    }
 }
 
 tasks.register("debugSigningProperties") {

@@ -371,7 +371,7 @@ mavenPublishing {
     publishToMavenCentral()
 
     // if (project.hasProperty("signingInMemoryKey")) {
-    signAllPublications()
+    // signAllPublications()
     // }
 
     pom {

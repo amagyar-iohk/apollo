@@ -212,36 +212,6 @@ kotlin {
 //     }
 // }
 
-npmPublish {
-    organization.set("hyperledger")
-    version.set(rootProject.version.toString())
-    access.set(NpmAccess.PUBLIC)
-    packages {
-        access.set(NpmAccess.PUBLIC)
-        named("js") {
-            scope.set("hyperledger")
-            packageName.set("identus-apollo")
-            readme.set(rootDir.resolve("README.md"))
-            packageJson {
-                author {
-                    name.set("IOG")
-                }
-                repository {
-                    type.set("git")
-                    url.set("https://github.com/hyperledger-identus/apollo")
-                }
-            }
-        }
-    }
-    registries {
-        access.set(NpmAccess.PUBLIC)
-        register("npmjs") {
-            uri.set("https://registry.npmjs.org")
-            authToken.set(System.getenv("NPM_TOKEN"))
-        }
-    }
-}
-
 /**
  * Adds a Swift interop configuration for a library.
  *
@@ -273,19 +243,6 @@ fun KotlinNativeTarget.swiftCinterop(library: String, platform: String) {
 }
 
 // === Group: Resource and Test Task Dependencies ===
-val tasksRequiringRustLibs =
-    listOf(
-        "jvmProcessResources",
-        "jsBrowserTest",
-        "jsNodeTest"
-    )
-
-tasksRequiringRustLibs.forEach {
-    tasks.named(it).configure {
-        dependsOn(":bip32-ed25519:prepareRustLibs")
-    }
-}
-
 val swiftPackageUpdateMinOSVersion =
     tasks.register("updateMinOSVersion") {
         group = "multiplatform-swift-package"
@@ -348,19 +305,6 @@ afterEvaluate {
     }
 }
 
-tasks.named("jsBrowserProductionLibraryDistribution") {
-    dependsOn(":bip32-ed25519:copyWasmOutput")
-}
-
-tasks.named("jsNodeProductionLibraryDistribution") {
-    dependsOn(":bip32-ed25519:copyWasmOutput")
-}
-
-// Ensure copy tasks always include duplicates
-tasks.withType<Copy>().configureEach {
-    duplicatesStrategy = DuplicatesStrategy.INCLUDE
-}
-
 // Configure Dokka tasks uniformly
 // tasks.withType<DokkaTask>().configureEach {
 //     moduleName.set(currentModuleName)
@@ -371,7 +315,7 @@ mavenPublishing {
     publishToMavenCentral()
 
     // if (project.hasProperty("signingInMemoryKey")) {
-    // signAllPublications()
+    signAllPublications()
     // }
 
     pom {
@@ -454,6 +398,37 @@ mavenPublishing {
             connection.set("scm:git:git://git@github.com/hyperledger/identus-apollo.git")
             developerConnection.set("scm:git:ssh://git@github.com/hyperledger/identus-apollo.git")
             url.set("https://github.com/hyperledger/identus-apollo")
+        }
+    }
+}
+
+
+npmPublish {
+    organization.set("hyperledger")
+    version.set(rootProject.version.toString())
+    access.set(NpmAccess.PUBLIC)
+    packages {
+        access.set(NpmAccess.PUBLIC)
+        named("js") {
+            scope.set("hyperledger")
+            packageName.set("identus-apollo")
+            readme.set(rootDir.resolve("README.md"))
+            packageJson {
+                author {
+                    name.set("IOG")
+                }
+                repository {
+                    type.set("git")
+                    url.set("https://github.com/hyperledger-identus/apollo")
+                }
+            }
+        }
+    }
+    registries {
+        access.set(NpmAccess.PUBLIC)
+        register("npmjs") {
+            uri.set("https://registry.npmjs.org")
+            authToken.set(System.getenv("NPM_TOKEN"))
         }
     }
 }

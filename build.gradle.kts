@@ -37,26 +37,6 @@ subprojects {
     }
 }
 
-tasks.register("debugSigningProperties") {
-    doLast {
-        println("--- Debugging Signing Properties ---")
-        val key = findProperty("signingInMemoryKey") as? String
-        val password = findProperty("signingInMemoryKeyPassword") as? String
-
-        if (key.isNullOrBlank()) {
-            println("❌ signingInMemoryKey: IS MISSING OR EMPTY")
-        } else {
-            println("✅ signingInMemoryKey: Is present (Length: ${key.length})")
-        }
-        if (password.isNullOrBlank()) {
-            println("❌ signingInMemoryKeyPassword: IS MISSING OR EMPTY")
-        } else {
-            println("✅ signingInMemoryKeyPassword: Is present (Length: ${password.length})")
-        }
-        println("------------------------------------")
-    }
-}
-
 /**
  * The `javadocJar` variable is used to register a `Jar` task to generate a Javadoc JAR file.
  * The Javadoc JAR file is created with the classifier "javadoc" and it includes the HTML documentation generated

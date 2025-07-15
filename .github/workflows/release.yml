@@ -94,7 +94,7 @@ jobs:
       - name: Build Kotlin Multiplatform Maven Artifacts
         if: ${{ inputs.release_maven }}
         run: |
-          ./gradlew publishToMavenLocal
+          ./gradlew publishToMavenLocal --no-configuration-cache --debug
 
       - name: Build Kotlin Multiplatform NPM Artifacts
         if: ${{ inputs.release_ts }}

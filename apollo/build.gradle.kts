@@ -1,4 +1,4 @@
-import dev.petuska.npm.publish.extension.domain.NpmAccess
+// import dev.petuska.npm.publish.extension.domain.NpmAccess
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import java.io.ByteArrayOutputStream
@@ -8,9 +8,9 @@ plugins {
     alias(libs.plugins.android.kotlin.multiplatform.library)
     // alias(libs.plugins.dokka)
     alias(libs.plugins.maven.publish)
-    alias(libs.plugins.npm.publish)
-    alias(libs.plugins.swiftpackage)
-    alias(libs.plugins.kover) apply false // https://github.com/Kotlin/kotlinx-kover/issues/747
+    // alias(libs.plugins.npm.publish)
+    // alias(libs.plugins.swiftpackage)
+    // alias(libs.plugins.kover) apply false // https://github.com/Kotlin/kotlinx-kover/issues/747
 }
 
 project.description = "Collection of cryptographic methods used across Identus platform."
@@ -25,86 +25,97 @@ kotlin {
     compilerOptions {
         freeCompilerArgs.addAll("-Xexpect-actual-classes",)
     }
-    jvm {
-        withSourcesJar(publish = true)
-        compilations.all {
-            compileTaskProvider.configure {
-                compilerOptions {
-                    jvmTarget.set(JvmTarget.JVM_17)
-                }
-            }
-        }
-    }
+    jvm()
     androidLibrary {
-        compileSdk = 34
-        minSdk = 21
-        namespace = "org.hyperledger.identus.apollo"
+        namespace = "dev.allain"
+        compileSdk = libs.versions.android.compileSdk.get().toInt()
+        minSdk = libs.versions.android.minSdk.get().toInt()
     }
-    iosArm64 {
-        swiftCinterop("IOHKSecureRandomGeneration", name)
-        swiftCinterop("IOHKCryptoKit", name)
-        binaries.framework {
-            baseName = appleBinaryName
-        }
-    }
-    iosX64 {
-        swiftCinterop("IOHKSecureRandomGeneration", name)
-        swiftCinterop("IOHKCryptoKit", name)
-        binaries.framework {
-            baseName = appleBinaryName
-        }
-    }
-    iosSimulatorArm64 {
-        swiftCinterop("IOHKSecureRandomGeneration", name)
-        swiftCinterop("IOHKCryptoKit", name)
-        binaries.framework {
-            baseName = appleBinaryName
-        }
-    }
-    macosArm64 {
-        swiftCinterop("IOHKSecureRandomGeneration", name)
-        swiftCinterop("IOHKCryptoKit", name)
-        binaries.framework {
-            baseName = appleBinaryName
-        }
-    }
-    macosX64 {
-        swiftCinterop("IOHKSecureRandomGeneration", name)
-        swiftCinterop("IOHKCryptoKit", name)
-        binaries.framework {
-            baseName = appleBinaryName
-        }
-    }
-    js(IR) {
-        outputModuleName = currentModuleName
-        binaries.library()
-        useCommonJs()
-        generateTypeScriptDefinitions()
-        this.compilations["main"].packageJson {
-            this.version = rootProject.version.toString()
-        }
-        this.compilations["test"].packageJson {
-            this.version = rootProject.version.toString()
-        }
-        browser {
-            webpackTask {
-                output.library = currentModuleName
-                output.libraryTarget = org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackOutput.Target.VAR
-            }
-            testTask {
-                useKarma { useChromeHeadless() }
-            }
-        }
-        nodejs {
-            testTask {
-                useKarma { useChromeHeadless() }
-            }
-        }
-    }
+    iosX64()
+    iosArm64()
+    iosSimulatorArm64()
+    linuxX64()
+
+    // jvm {
+    //     withSourcesJar(publish = true)
+    //     compilations.all {
+    //         compileTaskProvider.configure {
+    //             compilerOptions {
+    //                 jvmTarget.set(JvmTarget.JVM_17)
+    //             }
+    //         }
+    //     }
+    // }
+    // androidLibrary {
+    //     compileSdk = 34
+    //     minSdk = 21
+    //     namespace = "org.hyperledger.identus.apollo"
+    // }
+    // iosArm64 {
+    //     swiftCinterop("IOHKSecureRandomGeneration", name)
+    //     swiftCinterop("IOHKCryptoKit", name)
+    //     binaries.framework {
+    //         baseName = appleBinaryName
+    //     }
+    // }
+    // iosX64 {
+    //     swiftCinterop("IOHKSecureRandomGeneration", name)
+    //     swiftCinterop("IOHKCryptoKit", name)
+    //     binaries.framework {
+    //         baseName = appleBinaryName
+    //     }
+    // }
+    // iosSimulatorArm64 {
+    //     swiftCinterop("IOHKSecureRandomGeneration", name)
+    //     swiftCinterop("IOHKCryptoKit", name)
+    //     binaries.framework {
+    //         baseName = appleBinaryName
+    //     }
+    // }
+    // macosArm64 {
+    //     swiftCinterop("IOHKSecureRandomGeneration", name)
+    //     swiftCinterop("IOHKCryptoKit", name)
+    //     binaries.framework {
+    //         baseName = appleBinaryName
+    //     }
+    // }
+    // macosX64 {
+    //     swiftCinterop("IOHKSecureRandomGeneration", name)
+    //     swiftCinterop("IOHKCryptoKit", name)
+    //     binaries.framework {
+    //         baseName = appleBinaryName
+    //     }
+    // }
+    // js(IR) {
+    //     outputModuleName = currentModuleName
+    //     binaries.library()
+    //     useCommonJs()
+    //     generateTypeScriptDefinitions()
+    //     this.compilations["main"].packageJson {
+    //         this.version = rootProject.version.toString()
+    //     }
+    //     this.compilations["test"].packageJson {
+    //         this.version = rootProject.version.toString()
+    //     }
+    //     browser {
+    //         webpackTask {
+    //             output.library = currentModuleName
+    //             output.libraryTarget = org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackOutput.Target.VAR
+    //         }
+    //         testTask {
+    //             useKarma { useChromeHeadless() }
+    //         }
+    //     }
+    //     nodejs {
+    //         testTask {
+    //             useKarma { useChromeHeadless() }
+    //         }
+    //     }
+    // }
 
     sourceSets {
         commonMain.dependencies {
-            implementation(project(":bip32-ed25519"))
+            // implementation(project(":bip32-ed25519"))
             implementation(libs.serialization.json)
             implementation(libs.bignum)
             implementation(libs.okio)
@@ -116,17 +127,17 @@ kotlin {
             implementation(kotlin("test"))
         }
         androidMain.dependencies {
-            api(libs.secp256k1.kmp)
-            implementation(libs.secp256k1.kmp.jvm)
-            implementation(libs.secp256k1.kmp.android)
+            // api(libs.secp256k1.kmp)
+            // implementation(libs.secp256k1.kmp.jvm)
+            // implementation(libs.secp256k1.kmp.android)
             implementation(libs.guava)
             implementation(libs.bouncycastle)
             implementation(libs.bitcoinjcore)
             implementation(libs.jna.android)
         }
         jvmMain.dependencies {
-            api(libs.secp256k1.kmp)
-            implementation(libs.secp256k1.kmp.jvm)
+            // api(libs.secp256k1.kmp)
+            // implementation(libs.secp256k1.kmp.jvm)
             implementation(libs.guava)
             implementation(libs.bouncycastle)
             implementation(libs.bitcoinjcore)
@@ -135,43 +146,44 @@ kotlin {
         jvmTest.dependencies {
             implementation(libs.junit)
         }
-        jsMain.dependencies {
-            implementation(npm("elliptic", "6.6.1"))
-            implementation(npm("@types/elliptic", "6.4.18"))
-            implementation(npm("@noble/curves", "1.2.0"))
-            implementation(npm("@stablelib/x25519", "1.0.3"))
-            implementation(npm("hash.js", "1.1.7"))
-            implementation(npm("@noble/hashes", "1.3.1"))
-            implementation(npm("stream-browserify", "3.0.0"))
-            implementation(npm("buffer", "6.0.3"))
-            implementation(libs.kotlin.web)
-            implementation(libs.kotlin.node)
-        }
-        jsTest.dependencies {
-            implementation(npm("url", "0.11.4"))
-        }
-        nativeMain.dependencies {
-            implementation(project(":bip32-ed25519"))
-            implementation(project(":secp256k1-kmp"))
-        }
-        all {
-            languageSettings {
-                optIn("kotlin.RequiresOptIn")
-                optIn("kotlinx.cinterop.ExperimentalForeignApi")
-            }
-        }
+        // jsMain.dependencies {
+        //     implementation(npm("elliptic", "6.6.1"))
+        //     implementation(npm("@types/elliptic", "6.4.18"))
+        //     implementation(npm("@noble/curves", "1.2.0"))
+        //     implementation(npm("@stablelib/x25519", "1.0.3"))
+        //     implementation(npm("hash.js", "1.1.7"))
+        //     implementation(npm("@noble/hashes", "1.3.1"))
+        //     implementation(npm("stream-browserify", "3.0.0"))
+        //     implementation(npm("buffer", "6.0.3"))
+        //     implementation(libs.kotlin.web)
+        //     implementation(libs.kotlin.node)
+        // }
+        // jsTest.dependencies {
+        //     implementation(npm("url", "0.11.4"))
+        // }
+        // nativeMain.dependencies {
+        //     implementation(project(":bip32-ed25519"))
+        //     implementation(project(":secp256k1-kmp"))
+        // }
+        // all {
+        //     languageSettings {
+        //         optIn("kotlin.RequiresOptIn")
+        //         optIn("kotlinx.cinterop.ExperimentalForeignApi")
+        //     }
+        // }
     }
 
-    multiplatformSwiftPackage {
-        packageName("Apollo")
-        swiftToolsVersion("5.9")
-        targetPlatforms {
-            iOS { v(minimumIosVersion) }
-            macOS { v(minimumMacOSVersion) }
-        }
-        outputDirectory(File(rootDir, "apollo/build/packages/ApolloSwift"))
-    }
+    // multiplatformSwiftPackage {
+    //     packageName("Apollo")
+    //     swiftToolsVersion("5.9")
+    //     targetPlatforms {
+    //         iOS { v(minimumIosVersion) }
+    //         macOS { v(minimumMacOSVersion) }
+    //     }
+    //     outputDirectory(File(rootDir, "apollo/build/packages/ApolloSwift"))
+    // }
 }
+
 
 // tasks.withType<DokkaTask>().configureEach {
 //     moduleName.set(currentModuleName)
@@ -218,92 +230,92 @@ kotlin {
  * @param library The name of the library.
  * @param platform The platform for which the interop is being configured.
  */
-fun KotlinNativeTarget.swiftCinterop(library: String, platform: String) {
-    compilations.getByName("main") {
-        cinterops.create(library) {
-            extraOpts = listOf("-compiler-option", "-DNS_FORMAT_ARGUMENT(A)=")
-            when (platform) {
-                "iosX64", "iosSimulatorArm64" -> {
-                    includeDirs.headerFilterOnly("$rootDir/iOSLibs/$library/build/Release-iphonesimulator/include/")
-                    tasks[interopProcessingTaskName].dependsOn(":iOSLibs:build${library.replaceFirstChar(Char::uppercase)}Iphonesimulator")
-                }
+// fun KotlinNativeTarget.swiftCinterop(library: String, platform: String) {
+//     compilations.getByName("main") {
+//         cinterops.create(library) {
+//             extraOpts = listOf("-compiler-option", "-DNS_FORMAT_ARGUMENT(A)=")
+//             when (platform) {
+//                 "iosX64", "iosSimulatorArm64" -> {
+//                     includeDirs.headerFilterOnly("$rootDir/iOSLibs/$library/build/Release-iphonesimulator/include/")
+//                     tasks[interopProcessingTaskName].dependsOn(":iOSLibs:build${library.replaceFirstChar(Char::uppercase)}Iphonesimulator")
+//                 }
 
-                "iosArm64" -> {
-                    includeDirs.headerFilterOnly("$rootDir/iOSLibs/$library/build/Release-iphoneos/include/")
-                    tasks[interopProcessingTaskName].dependsOn(":iOSLibs:build${library.replaceFirstChar(Char::uppercase)}Iphoneos")
-                }
+//                 "iosArm64" -> {
+//                     includeDirs.headerFilterOnly("$rootDir/iOSLibs/$library/build/Release-iphoneos/include/")
+//                     tasks[interopProcessingTaskName].dependsOn(":iOSLibs:build${library.replaceFirstChar(Char::uppercase)}Iphoneos")
+//                 }
 
-                "macosX64", "macosArm64" -> {
-                    includeDirs.headerFilterOnly("$rootDir/iOSLibs/$library/build/Release/include/")
-                    tasks[interopProcessingTaskName].dependsOn(":iOSLibs:build${library.replaceFirstChar(Char::uppercase)}Macosx")
-                }
-            }
-        }
-    }
-}
+//                 "macosX64", "macosArm64" -> {
+//                     includeDirs.headerFilterOnly("$rootDir/iOSLibs/$library/build/Release/include/")
+//                     tasks[interopProcessingTaskName].dependsOn(":iOSLibs:build${library.replaceFirstChar(Char::uppercase)}Macosx")
+//                 }
+//             }
+//         }
+//     }
+// }
 
 // === Group: Resource and Test Task Dependencies ===
-val swiftPackageUpdateMinOSVersion =
-    tasks.register("updateMinOSVersion") {
-        group = "multiplatform-swift-package"
-        description =
-            "Updates the minimum OS version of the plists in the xcframework, known issue of the KMP SwiftPackage plugin"
-        dependsOn("createSwiftPackage")
+// val swiftPackageUpdateMinOSVersion =
+//     tasks.register("updateMinOSVersion") {
+//         group = "multiplatform-swift-package"
+//         description =
+//             "Updates the minimum OS version of the plists in the xcframework, known issue of the KMP SwiftPackage plugin"
+//         dependsOn("createSwiftPackage")
 
-        val xcframeworkDir = layout.projectDirectory.file("build/packages/ApolloSwift/Apollo.xcframework").asFile
+//         val xcframeworkDir = layout.projectDirectory.file("build/packages/ApolloSwift/Apollo.xcframework").asFile
 
-        doLast {
-            val frameworkPaths =
-                mapOf(
-                    "ios-arm64/ApolloLibrary.framework" to "ios-arm64/ApolloLibrary.framework/ApolloLibrary",
-                    "ios-arm64_x86_64-simulator/ApolloLibrary.framework" to "ios-arm64_x86_64-simulator/ApolloLibrary.framework/ApolloLibrary"
-                )
+//         doLast {
+//             val frameworkPaths =
+//                 mapOf(
+//                     "ios-arm64/ApolloLibrary.framework" to "ios-arm64/ApolloLibrary.framework/ApolloLibrary",
+//                     "ios-arm64_x86_64-simulator/ApolloLibrary.framework" to "ios-arm64_x86_64-simulator/ApolloLibrary.framework/ApolloLibrary"
+//                 )
 
-            frameworkPaths.forEach { (plistFolder, binaryRelativePath) ->
-                val binaryFile = xcframeworkDir.resolve(binaryRelativePath)
-                val plistFile = xcframeworkDir.resolve("$plistFolder/Info.plist")
+//             frameworkPaths.forEach { (plistFolder, binaryRelativePath) ->
+//                 val binaryFile = xcframeworkDir.resolve(binaryRelativePath)
+//                 val plistFile = xcframeworkDir.resolve("$plistFolder/Info.plist")
 
-                if (binaryFile.exists() && plistFile.exists()) {
-                    val currentMinOS =
-                        ByteArrayOutputStream().use { outputStream ->
-                            providers.exec {
-                                commandLine("otool", "-l", binaryFile.absolutePath)
-                                standardOutput = outputStream
-                            }
-                            outputStream
-                                .toString()
-                                .lines()
-                                .firstOrNull { it.contains("minos") }
-                                ?.trim()
-                                ?.split(" ")
-                                ?.lastOrNull()
-                                ?: throw GradleException("Could not determine min OS version from binary")
-                        }
+//                 if (binaryFile.exists() && plistFile.exists()) {
+//                     val currentMinOS =
+//                         ByteArrayOutputStream().use { outputStream ->
+//                             providers.exec {
+//                                 commandLine("otool", "-l", binaryFile.absolutePath)
+//                                 standardOutput = outputStream
+//                             }
+//                             outputStream
+//                                 .toString()
+//                                 .lines()
+//                                 .firstOrNull { it.contains("minos") }
+//                                 ?.trim()
+//                                 ?.split(" ")
+//                                 ?.lastOrNull()
+//                                 ?: throw GradleException("Could not determine min OS version from binary")
+//                         }
 
-                    providers.exec {
-                        commandLine(
-                            "/usr/libexec/PlistBuddy",
-                            "-c",
-                            "Set :MinimumOSVersion $currentMinOS",
-                            plistFile.absolutePath
-                        )
-                    }
+//                     providers.exec {
+//                         commandLine(
+//                             "/usr/libexec/PlistBuddy",
+//                             "-c",
+//                             "Set :MinimumOSVersion $currentMinOS",
+//                             plistFile.absolutePath
+//                         )
+//                     }
 
-                    println("Updated $plistFile with MinimumOSVersion = $currentMinOS")
-                } else {
-                    println("Required files not found: binary=$binaryFile, plist=$plistFile")
-                }
-            }
-        }
-    }
+//                     println("Updated $plistFile with MinimumOSVersion = $currentMinOS")
+//                 } else {
+//                     println("Required files not found: binary=$binaryFile, plist=$plistFile")
+//                 }
+//             }
+//         }
+//     }
 
-afterEvaluate {
-    if (tasks.findByName("createSwiftPackage") != null) {
-        tasks.named("createSwiftPackage").configure {
-            finalizedBy(swiftPackageUpdateMinOSVersion)
-        }
-    }
-}
+// afterEvaluate {
+//     if (tasks.findByName("createSwiftPackage") != null) {
+//         tasks.named("createSwiftPackage").configure {
+//             finalizedBy(swiftPackageUpdateMinOSVersion)
+//         }
+//     }
+// }
 
 // Configure Dokka tasks uniformly
 // tasks.withType<DokkaTask>().configureEach {
@@ -403,32 +415,32 @@ mavenPublishing {
 }
 
 
-npmPublish {
-    organization.set("hyperledger")
-    version.set(rootProject.version.toString())
-    access.set(NpmAccess.PUBLIC)
-    packages {
-        access.set(NpmAccess.PUBLIC)
-        named("js") {
-            scope.set("hyperledger")
-            packageName.set("identus-apollo")
-            readme.set(rootDir.resolve("README.md"))
-            packageJson {
-                author {
-                    name.set("IOG")
-                }
-                repository {
-                    type.set("git")
-                    url.set("https://github.com/hyperledger-identus/apollo")
-                }
-            }
-        }
-    }
-    registries {
-        access.set(NpmAccess.PUBLIC)
-        register("npmjs") {
-            uri.set("https://registry.npmjs.org")
-            authToken.set(System.getenv("NPM_TOKEN"))
-        }
-    }
-}
+// npmPublish {
+//     organization.set("hyperledger")
+//     version.set(rootProject.version.toString())
+//     access.set(NpmAccess.PUBLIC)
+//     packages {
+//         access.set(NpmAccess.PUBLIC)
+//         named("js") {
+//             scope.set("hyperledger")
+//             packageName.set("identus-apollo")
+//             readme.set(rootDir.resolve("README.md"))
+//             packageJson {
+//                 author {
+//                     name.set("IOG")
+//                 }
+//                 repository {
+//                     type.set("git")
+//                     url.set("https://github.com/hyperledger-identus/apollo")
+//                 }
+//             }
+//         }
+//     }
+//     registries {
+//         access.set(NpmAccess.PUBLIC)
+//         register("npmjs") {
+//             uri.set("https://registry.npmjs.org")
+//             authToken.set(System.getenv("NPM_TOKEN"))
+//         }
+//     }
+// }

@@ -8,6 +8,8 @@ vanniktech-maven-publish = "0.33.0"
 npm-publish = "3.5.3"
 swiftpackage = "2.2.4"
 secp256k1-kmp = "0.16.0"
+android-minSdk = "24"
+android-compileSdk = "34"
 
 [libraries]
 serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version = "1.6.3" }

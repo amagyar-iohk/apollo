@@ -16,7 +16,7 @@ dependencyResolutionManagement {
 rootProject.name = "apollo"
 
 include(":apollo")
-// include(":iOSLibs")
-// include(":secp256k1-kmp")
-// include(":secp256k1-kmp:native")
-// include(":bip32-ed25519")
+include(":iOSLibs")
+include(":secp256k1-kmp")
+include(":secp256k1-kmp:native")
+include(":bip32-ed25519")

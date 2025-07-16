@@ -83,6 +83,10 @@ val generatedJvmLibsDirs =
         generatedResourcesDir.resolve("jvmMain/libs/linux-x86-64")
     )
 
+// tasks.named("build") {
+//     dependsOn("kotlinStoreYarnLock")
+// }
+
 kotlin {
     jvm {
         withSourcesJar()
@@ -132,29 +136,29 @@ kotlin {
             baseName = appleBinaryName
         }
     }
-    js(IR) {
-        this.binaries.library()
-        this.useCommonJs()
-        generateTypeScriptDefinitions()
-        browser {
-            webpackTask {
-                output.library = currentModuleName
-                output.libraryTarget = KotlinWebpackOutput.Target.VAR
-            }
-            testTask {
-                useKarma {
-                    useChromeHeadless()
-                }
-            }
-        }
-        nodejs {
-            testTask {
-                useKarma {
-                    useChromeHeadless()
-                }
-            }
-        }
-    }
+    // js(IR) {
+    //     this.binaries.library()
+    //     this.useCommonJs()
+    //     generateTypeScriptDefinitions()
+    //     browser {
+    //         webpackTask {
+    //             output.library = currentModuleName
+    //             output.libraryTarget = KotlinWebpackOutput.Target.VAR
+    //         }
+    //         testTask {
+    //             useKarma {
+    //                 useChromeHeadless()
+    //             }
+    //         }
+    //     }
+    //     nodejs {
+    //         testTask {
+    //             useKarma {
+    //                 useChromeHeadless()
+    //             }
+    //         }
+    //     }
+    // }
 
     @OptIn(ExperimentalKotlinGradlePluginApi::class)
     compilerOptions {
@@ -211,20 +215,20 @@ kotlin {
             dependsOn(uniffiMain)
             kotlin.srcDir(layout.buildDirectory.dir("generated/nativeMain/kotlin"))
         }
-        val jsMain by getting {
-            // JS Main is separate and does NOT depend on Uniffi code
-            dependencies {
-                implementation(npm("@noble/hashes", "1.3.1"))
-                implementation(libs.kotlin.web)
-                implementation(libs.kotlin.node)
-            }
-        }
-        all {
-            languageSettings {
-                optIn("kotlin.RequiresOptIn")
-                optIn("kotlinx.cinterop.ExperimentalForeignApi")
-            }
-        }
+        // val jsMain by getting {
+        //     // JS Main is separate and does NOT depend on Uniffi code
+        //     dependencies {
+        //         implementation(npm("@noble/hashes", "1.3.1"))
+        //         implementation(libs.kotlin.web)
+        //         implementation(libs.kotlin.node)
+        //     }
+        // }
+        // all {
+        //     languageSettings {
+        //         optIn("kotlin.RequiresOptIn")
+        //         optIn("kotlinx.cinterop.ExperimentalForeignApi")
+        //     }
+        // }
     }
 
     targets.withType<org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget>().configureEach {
@@ -238,24 +242,35 @@ kotlin {
             "macosX64" to "darwin-x86-64"
         )
         val rustArch = archMapping[currentTarget] ?: error("Unsupported target $currentTarget for Rust arch mapping.")
+
         compilations["main"].cinterops.create("ed25519_bip32_wrapper") {
+            // This structure is from your original file.
             val interopDir = layout.buildDirectory.dir("generated/nativeInterop/cinterop/headers/ed25519_bip32_wrapper").get().asFile
             val nativeLibDir = copyNativeLibsProvider.get().outputs.files.first().resolve("${currentTarget}Main/libs/$rustArch")
+
             packageName("ed25519_bip32_wrapper.cinterop")
             header(interopDir.resolve("ed25519_bip32_wrapper.h"))
-            defFile(project.file("src/nativeInterop/cinterop/ed25519_bip32_wrapper.def"))
+
+            // --- THE FIX ---
+            // The error indicates layout.projectDirectory.file() returns a RegularFile directly.
+            // We get it and then convert it to a java.io.File with .asFile for the defFile function.
+            val defFileObject = layout.projectDirectory.file("src/nativeInterop/cinterop/ed25519_bip32_wrapper.def")
+            defFile(defFileObject.asFile)
+
+            // Keep the rest the same as your original
             compilerOpts("-I${interopDir.absolutePath}")
             extraOpts("-libraryPath", nativeLibDir.absolutePath, "-staticLibrary", "libuniffi_ed25519_bip32_wrapper.a")
             tasks[interopProcessingTaskName].dependsOn("prepareRustLibs")
         }
     }
+
 }
 
 // === Group: Rust tasks Tasks ===
 tasks.register<Exec>("buildRustWrapper") {
     group = "build"
     description = "Builds Rust binaries for Kotlin multiplatform."
-    workingDir(wrapperDir)
+    workingDir = wrapperDir.asFile
     commandLine("bash", "./build-kotlin-library.sh")
     inputs.file(wrapperDir.file("build-kotlin-library.sh"))
     outputs.dirs(wrapperDir.dir("target"), wrapperOutputDir)

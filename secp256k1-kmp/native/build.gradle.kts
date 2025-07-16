@@ -3,82 +3,45 @@ plugins {
 }
 
 val bash = "bash"
-
 val currentOs = org.gradle.internal.os.OperatingSystem.current()
 
-val buildDirPath = projectDir.resolve("build")
+fun Task.outputDir(path: String) = outputs.dir(layout.buildDirectory.dir(path))
 
-val iosPlatforms = listOf("ios", "iossimulator")
-
-val macosArchitecture = listOf("macosX64", "macosArm64")
-
-fun outputMissing(dir: File) = !dir.exists() || dir.listFiles().isNullOrEmpty()
-
-// Host build task
-tasks.register<Exec>("buildSecp256k1Host") {
-    group = "native build"
-    workingDir = projectDir
-    environment(
-        "TARGET",
-        when {
-            currentOs.isLinux -> "linux"
-            currentOs.isMacOsX -> "darwin"
-            currentOs.isWindows -> "mingw"
-            else -> error("Unsupported OS $currentOs")
-        }
-    )
-    commandLine(bash, "build.sh")
-    inputs.file("build.sh")
-    outputs.dir(buildDirPath)
-}
-
+// A single task for all macOS architectures
 tasks.register<Exec>("buildSecp256k1Macos") {
     group = "native build"
-    workingDir = projectDir
+    enabled = currentOs.isMacOsX
+    workingDir = layout.projectDirectory.asFile
     commandLine(bash, "build-ios.sh", "macosx")
     inputs.file("build-ios.sh")
-    outputs.dir(buildDirPath.resolve("ios/arm64-x86_x64-macosx"))
-    outputs.dir(buildDirPath.resolve("ios/x86_x64-macosx"))
-    onlyIf { currentOs.isMacOsX }
+    inputs.file("xconfigure.sh")
+    outputs.dir(layout.buildDirectory.dir("ios"))
 }
 
+// A single task for all iOS architectures
 tasks.register<Exec>("buildSecp256k1Ios") {
     group = "native build"
-    workingDir = projectDir
-    commandLine(bash, "build-ios.sh", *iosPlatforms.toTypedArray())
+    enabled = currentOs.isMacOsX
+    workingDir = layout.projectDirectory.asFile
+    commandLine(bash, "build-ios.sh", "ios", "iossimulator")
     inputs.file("build-ios.sh")
-    outputs.dir(buildDirPath.resolve("ios"))
-    onlyIf { currentOs.isMacOsX }
-    onlyIf { outputMissing(buildDirPath.resolve("ios").resolve("arm64-iphoneos")) }
+    inputs.file("xconfigure.sh")
+    outputs.dir(layout.buildDirectory.dir("ios"))
 }
 
-tasks.register<Exec>("buildSecp256k1IosSimulatorArm64") {
-    group = "native build"
-    workingDir = projectDir
-    commandLine(bash, "build-ios.sh", "iossimulator")
-    inputs.file("build-ios.sh")
-    outputs.dir(buildDirPath.resolve("ios"))
-    onlyIf { currentOs.isMacOsX }
-}
-
-// Aggregate all builds task
+// Aggregate and Clean-up Tasks
 tasks.register("buildSecp256k1") {
     group = "native build"
-    dependsOn("buildSecp256k1Host")
     if (currentOs.isMacOsX) {
-        dependsOn("buildSecp256k1Ios")
-        dependsOn("buildSecp256k1IosSimulatorArm64")
-        dependsOn("buildSecp256k1Macos")
+        dependsOn("buildSecp256k1Ios", "buildSecp256k1Macos")
     }
 }
 
-// Proper clean-up
 tasks.register<Delete>("deleteNativeBuild") {
     group = "build"
-    delete(buildDirPath)
+    delete(layout.buildDirectory)
 }
 
-// Attach clean to Gradle's standard clean
 tasks.named("clean") {
     dependsOn("deleteNativeBuild")
 }

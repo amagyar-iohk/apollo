@@ -12,12 +12,6 @@ group = "dev.allain"
 
 allprojects {
     group = rootProject.group
-
-    // repositories {
-    //     google()
-    //     mavenCentral()
-    // }
-
     // rootProject.plugins.withType<org.jetbrains.kotlin.gradle.targets.js.yarn.YarnPlugin> {
     //     rootProject.the<YarnRootExtension>().reportNewYarnLock = true
     //     rootProject.the<YarnRootExtension>().yarnLockAutoReplace = true

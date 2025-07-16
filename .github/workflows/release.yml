@@ -73,8 +73,8 @@ jobs:
       #   with:
       #     xcode-version: '16.2'
 
-      # - name: Install wasm-pack
-      #   run: cargo install wasm-pack
+      - name: Install wasm-pack
+        run: cargo install wasm-pack
 
       # - name: Update gradle.properties with new version
       #   run: |

@@ -1,3 +1,4 @@
+Calculating task graph as no cached configuration is available for tasks: tasks
 
 > Task :tasks
 
@@ -15,7 +16,6 @@ allMetadataJar - Assembles a jar archive containing the metadata for all Kotlin 
 androidSourcesJar - Assembles a jar archive containing the sources of target 'android'.
 assemble - Assembles the outputs of this project.
 assembleAndroidTest - Assembles all the Test applications.
-assembleJsPackage - Assembles js package.
 assembleUnitTest - Assembles all the unit test applications.
 build - Assembles and tests this project.
 buildDependents - Assembles and tests this project and all projects that depend on it.
@@ -63,10 +63,6 @@ iosX64MetadataElements - Assembles Kotlin metadata of target 'iosX64'.
 iosX64SourcesJar - Assembles a jar archive containing the sources of target 'iosX64'.
 iosX64TestBinaries - Links all binaries for compilation 'test' of target 'iosX64'.
 iosX64TestKlibrary - Assembles outputs for compilation 'test' of target 'iosX64'
-jsJar - Assembles an archive containing the main classes.
-jsMainClasses - Assembles outputs for compilation 'main' of target 'js'
-jsSourcesJar - Assembles a jar archive containing the sources of target 'js'.
-jsTestClasses - Assembles outputs for compilation 'test' of target 'js'
 jvmJar - Assembles an archive containing the main classes.
 jvmMainClasses - Assembles outputs for compilation 'main' of target 'jvm'
 jvmSourcesJar - Assembles a jar archive containing the sources of target 'jvm'.
@@ -113,8 +109,6 @@ metadataMainClasses - Assembles outputs for compilation 'main' of target 'metada
 metadataNativeMainClasses - Assembles outputs for compilation 'nativeMain' of target 'metadata'
 metadataSourcesJar - Assembles a jar archive containing the sources of target 'metadata'.
 metadataUniffiMainClasses - Assembles outputs for compilation 'uniffiMain' of target 'metadata'
-pack
-packJsPackage - Packs js package.
 sourcesJar - Assembles a jar archive containing the sources of target 'kotlin'.
 
 Build Setup tasks
@@ -132,14 +126,8 @@ buildIOHKSecureRandomGenerationIphoneos - Build IOHKSecureRandomGeneration for i
 buildIOHKSecureRandomGenerationIphonesimulator - Build IOHKSecureRandomGeneration for iphonesimulator.
 buildIOHKSecureRandomGenerationMacosx - Build IOHKSecureRandomGeneration for macosx.
 
-Formatting tasks
-----------------
-ktlintFormat - Runs the ktlint formatter on all kotlin sources in this project.
-
 Help tasks
 ----------
-addKtlintCheckGitPreCommitHook - Adds git hook to run ktlintCheck on changed files
-addKtlintFormatGitPreCommitHook - Adds git hook to run ktlintFormat on changed files
 artifactTransforms - Displays the Artifact Transforms that can be executed in root project 'apollo'.
 buildEnvironment - Displays all buildscript dependencies declared in root project 'apollo'.
 dependencies - Displays all dependencies declared in root project 'apollo'.
@@ -147,7 +135,6 @@ dependencyInsight - Displays the insight into a specific dependency in root proj
 help - Displays a help message.
 javaToolchains - Displays the detected java toolchains.
 kotlinDslAccessorsReport - Prints the Kotlin code for accessing the currently available project extensions and conventions.
-ktlintGenerateBaseline - Generates KtLint baseline file
 outgoingVariants - Displays the outgoing variants of root project 'apollo'.
 projects - Displays the sub-projects of root project 'apollo'.
 properties - Displays the properties of root project 'apollo'.
@@ -191,43 +178,11 @@ commonizeNativeDistribution - Invokes the commonizer on platform libraries provi
 copyCommonizeCInteropForIde - Copies the output of commonizeCInterop into the root projects .gradle folder for the IDE
 runCommonizer - [Deprecated: Use 'commonize' instead]
 
-Kotlin browser tasks
---------------------
-jsBrowserDevelopmentLibraryDistribution
-jsBrowserProductionLibraryDistribution
-
-Kotlin node tasks
------------------
-jsNodeDevelopmentLibraryDistribution
-jsNodeProductionLibraryDistribution
-
-Multiplatform-swift-package tasks
----------------------------------
-createSwiftPackage - Creates a Swift package to distribute an XCFramework
-createUniversalIosSimulatorFramework - Creates a universal (fat) ios simulator framework
-createUniversalMacosFramework - Creates a universal (fat) macos framework
-createUniversalTvosSimulatorFramework - Creates a universal (fat) tvos simulator framework
-createUniversalWatchosSimulatorFramework - Creates a universal (fat) watchos simulator framework
-createXCFramework - Creates an XCFramework for all declared Apple targets
-updateMinOSVersion - Updates the minimum OS version of the plists in the xcframework, known issue of the KMP SwiftPackage plugin
-
 Native build tasks
 ------------------
 buildSecp256k1
-buildSecp256k1Host
 buildSecp256k1Ios
-buildSecp256k1IosSimulatorArm64
 buildSecp256k1Macos
-
-NodeJs tasks
-------------
-jsPackageJson - Create package.json file for compilation 'main' (target js (js))
-jsTestPackageJson - Create package.json file for compilation 'test' (target js (js))
-kotlinNodeJsSetup - Download and install a local node/npm version
-kotlinNpmInstall - Find, download and link NPM dependencies and projects
-kotlinYarnSetup - Download and install a local yarn version
-nodeKotlinClean - Clean unused local node version
-rootPackageJson - Create root package.json
 
 Publishing tasks
 ----------------
@@ -235,7 +190,6 @@ generateMetadataFileForAndroidPublication - Generates the Gradle metadata file f
 generateMetadataFileForIosArm64Publication - Generates the Gradle metadata file for publication 'iosArm64'.
 generateMetadataFileForIosSimulatorArm64Publication - Generates the Gradle metadata file for publication 'iosSimulatorArm64'.
 generateMetadataFileForIosX64Publication - Generates the Gradle metadata file for publication 'iosX64'.
-generateMetadataFileForJsPublication - Generates the Gradle metadata file for publication 'js'.
 generateMetadataFileForJvmPublication - Generates the Gradle metadata file for publication 'jvm'.
 generateMetadataFileForKotlinMultiplatformPublication - Generates the Gradle metadata file for publication 'kotlinMultiplatform'.
 generateMetadataFileForMacosArm64Publication - Generates the Gradle metadata file for publication 'macosArm64'.
@@ -244,7 +198,6 @@ generatePomFileForAndroidPublication - Generates the Maven POM file for publicat
 generatePomFileForIosArm64Publication - Generates the Maven POM file for publication 'iosArm64'.
 generatePomFileForIosSimulatorArm64Publication - Generates the Maven POM file for publication 'iosSimulatorArm64'.
 generatePomFileForIosX64Publication - Generates the Maven POM file for publication 'iosX64'.
-generatePomFileForJsPublication - Generates the Maven POM file for publication 'js'.
 generatePomFileForJvmPublication - Generates the Maven POM file for publication 'jvm'.
 generatePomFileForKotlinMultiplatformPublication - Generates the Maven POM file for publication 'kotlinMultiplatform'.
 generatePomFileForMacosArm64Publication - Generates the Maven POM file for publication 'macosArm64'.
@@ -259,9 +212,6 @@ publishIosSimulatorArm64PublicationToMavenCentralRepository - Publishes Maven pu
 publishIosSimulatorArm64PublicationToMavenLocal - Publishes Maven publication 'iosSimulatorArm64' to the local Maven repository.
 publishIosX64PublicationToMavenCentralRepository - Publishes Maven publication 'iosX64' to Maven repository 'mavenCentral'.
 publishIosX64PublicationToMavenLocal - Publishes Maven publication 'iosX64' to the local Maven repository.
-publishJsPackageToNpmjsRegistry - Publishes NPM package to NPM registry
-publishJsPublicationToMavenCentralRepository - Publishes Maven publication 'js' to Maven repository 'mavenCentral'.
-publishJsPublicationToMavenLocal - Publishes Maven publication 'js' to the local Maven repository.
 publishJvmPublicationToMavenCentralRepository - Publishes Maven publication 'jvm' to Maven repository 'mavenCentral'.
 publishJvmPublicationToMavenLocal - Publishes Maven publication 'jvm' to the local Maven repository.
 publishKotlinMultiplatformPublicationToMavenCentralRepository - Publishes Maven publication 'kotlinMultiplatform' to Maven repository 'mavenCentral'.
@@ -302,24 +252,9 @@ check - Runs all checks.
 checkKotlinGradlePluginConfigurationErrors - Checks that Kotlin Gradle Plugin hasn't reported project configuration errors, failing otherwise. This task always runs before compileKotlin* or similar tasks.
 iosSimulatorArm64Test - Executes Kotlin/Native unit tests for target iosSimulatorArm64.
 iosX64Test - Executes Kotlin/Native unit tests for target iosX64.
-jsBrowserTest - Run all js tests inside browser using karma and webpack
-jsNodeTest - Run all js tests inside nodejs using the builtin test framework
-jsTest - Run JS tests for all platforms
 jvmTest - Runs the tests of the test test run.
-koverBinaryReport - Task to generate binary coverage report in IntelliJ format for all code.
-koverCachedVerify - Cacheable task for performing verification for all code.
-koverHtmlReport - Task to generate HTML coverage report for all code.
-koverLog - Task to print coverage to log for all code.
-koverVerify
-koverXmlReport - Task to generate XML coverage report for all code.
-ktlintCheck - Runs ktlint on all kotlin sources in this project.
 macosArm64Test - Executes Kotlin/Native unit tests for target macosArm64.
 macosX64Test - Executes Kotlin/Native unit tests for target macosX64.
-
-Rules
------
-Pattern: clean<TaskName>: Cleans the output files of a task.
-Pattern: build<ConfigurationName>: Assembles the artifacts of a configuration.
 
 To see all tasks and more detail, run gradlew tasks --all
 
@@ -327,3 +262,4 @@ To see more detail about a task, run gradlew help --task <task>
 
 BUILD SUCCESSFUL in 2s
 1 actionable task: 1 executed
+Configuration cache entry stored.

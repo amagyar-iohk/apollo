@@ -337,6 +337,9 @@ mavenPublishing {
     signAllPublications()
     // }
 
+    coordinates(group.toString(), "bip32-ed25519", rootProject.version.toString())
+
+
     pom {
         name.set("Identus bip32-ed25519")
         description.set("Identus Bip32 HD Keys in Ed25519.")

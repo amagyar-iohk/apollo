@@ -149,7 +149,7 @@ kotlin {
         }
     }
     multiplatformSwiftPackage {
-        packageName("Apollo")
+        packageName(appleBinaryName)
         swiftToolsVersion("5.9")
         targetPlatforms {
             iOS { v(minimumIosVersion) }
@@ -285,13 +285,13 @@ val swiftPackageUpdateMinOSVersion =
             "Updates the minimum OS version of the plists in the xcframework, known issue of the KMP SwiftPackage plugin"
         dependsOn("createSwiftPackage")
 
-        val xcframeworkDir = layout.projectDirectory.file("build/packages/ApolloSwift/Apollo.xcframework").asFile
+        val xcframeworkDir = layout.projectDirectory.file("build/packages/ApolloSwift/$appleBinaryName.xcframework").asFile
 
         doLast {
             val frameworkPaths =
                 mapOf(
-                    "ios-arm64/ApolloLibrary.framework" to "ios-arm64/ApolloLibrary.framework/ApolloLibrary",
-                    "ios-arm64_x86_64-simulator/ApolloLibrary.framework" to "ios-arm64_x86_64-simulator/ApolloLibrary.framework/ApolloLibrary"
+                    "ios-arm64/$appleBinaryName.framework" to "ios-arm64/$appleBinaryName.framework/$appleBinaryName",
+                    "ios-arm64_x86_64-simulator/$appleBinaryName.framework" to "ios-arm64_x86_64-simulator/$appleBinaryName.framework/$appleBinaryName"
                 )
 
             frameworkPaths.forEach { (plistFolder, binaryRelativePath) ->

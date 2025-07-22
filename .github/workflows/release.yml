@@ -138,24 +138,23 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      # - name: Commit updated files and tag the release
-      #   uses: stefanzweifel/git-auto-commit-action@v5
-      #   with:
-      #     commit_message: |
-      #       chore(release): v${{ github.event.inputs.version }}
-      #     tagging_message: v${{ github.event.inputs.version }}
-      #     file_pattern: |
-      #       Package.swift
-      #       package.json
-      #       CHANGELOG.md
-      #       gradle.properties
+      - name: Commit updated files and tag the release
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: |
+            chore(release): v${{ github.event.inputs.version }}
+          tagging_message: v${{ github.event.inputs.version }}
+          file_pattern: |
+            Package.swift
+            ApolloLibrary.podspec
+            gradle.properties
 
-      # - name: Create GitHub Release
-      #   uses: softprops/action-gh-release@v2
-      #   if: ${{ inputs.release_swift }}
-      #   with:
-      #     tag_name: v${{ github.event.inputs.version }}
-      #     files: |
-      #       ./apollo/build/packages/ApolloSwift/Apollo.xcframework.zip
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: ${{ inputs.release_swift }}
+        with:
+          tag_name: v${{ github.event.inputs.version }}
+          files: |
+            ./apollo/build/packages/ApolloSwift/Apollo.xcframework.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

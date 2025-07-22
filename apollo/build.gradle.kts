@@ -453,6 +453,7 @@ npmPublish {
                     type.set("git")
                     url.set("https://github.com/hyperledger-identus/apollo")
                 }
+                license.set("Apache-2.0")
             }
         }
     }

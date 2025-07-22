@@ -112,6 +112,7 @@ jobs:
             Package.swift
 
       - name: Publish JVM & Android to Maven Central
+        if: ${{ inputs.release_maven }}
         run: |
           ./gradlew publishToMavenCentral --no-configuration-cache
 

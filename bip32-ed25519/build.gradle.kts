@@ -55,13 +55,11 @@ tasks.register<Copy>("copyNativeLibs") {
         "iosArm64Main" to listOf("aarch64-apple-ios")
     )
 
-    // Now, configure each source and its relative destination
     targetDirs.forEach { (target, architectures) ->
         architectures.forEach { archDir ->
             val outputArchDir = archMapping[archDir] ?: archDir
             from(wrapperDir.dir("target/$archDir/release")) {
                 include("*.so", "*.dylib", "*.a")
-                // Use a simple string for the relative path
                 into("$target/libs/$outputArchDir")
             }
         }
@@ -70,22 +68,6 @@ tasks.register<Copy>("copyNativeLibs") {
 
 val copyGeneratedKotlinProvider = tasks.named<Copy>("copyGeneratedKotlin")
 val copyNativeLibsProvider = tasks.named<Copy>("copyNativeLibs")
-
-val generatedResourcesDir =
-    project.layout.buildDirectory.asFile
-        .get()
-        .resolve("generatedResources")
-val generatedJvmLibsDirs =
-    listOf(
-        generatedResourcesDir.resolve("jvmMain/libs/darwin-aarch64"),
-        generatedResourcesDir.resolve("jvmMain/libs/linux-aarch64"),
-        generatedResourcesDir.resolve("jvmMain/libs/darwin-x86-64"),
-        generatedResourcesDir.resolve("jvmMain/libs/linux-x86-64")
-    )
-
-// tasks.named("build") {
-//     dependsOn("kotlinStoreYarnLock")
-// }
 
 kotlin {
     jvm {
@@ -102,7 +84,7 @@ kotlin {
             useJUnitPlatform()
             systemProperty(
                 "jna.library.path",
-                copyNativeLibsProvider.map { it.outputs.files.asPath }.get()
+                copyNativeLibsProvider.map { it.outputs.files.asPath }
             )
         }
     }
@@ -136,29 +118,30 @@ kotlin {
             baseName = appleBinaryName
         }
     }
-    // js(IR) {
-    //     this.binaries.library()
-    //     this.useCommonJs()
-    //     generateTypeScriptDefinitions()
-    //     browser {
-    //         webpackTask {
-    //             output.library = currentModuleName
-    //             output.libraryTarget = KotlinWebpackOutput.Target.VAR
-    //         }
-    //         testTask {
-    //             useKarma {
-    //                 useChromeHeadless()
-    //             }
-    //         }
-    //     }
-    //     nodejs {
-    //         testTask {
-    //             useKarma {
-    //                 useChromeHeadless()
-    //             }
-    //         }
-    //     }
-    // }
+    js(IR) {
+        this.binaries.library()
+        this.useCommonJs()
+        generateTypeScriptDefinitions()
+        browser {
+            webpackTask {
+                output.library = currentModuleName
+                output.libraryTarget = KotlinWebpackOutput.Target.VAR
+            }
+            testTask {
+                useKarma {
+                    useChromeHeadless()
+                }
+            }
+        }
+        nodejs {
+            testTask {
+                // Use Mocha for Node.js tests
+                useMocha {
+                    timeout = "30s"
+                }
+            }
+        }
+    }
 
     @OptIn(ExperimentalKotlinGradlePluginApi::class)
     compilerOptions {
@@ -215,20 +198,20 @@ kotlin {
             dependsOn(uniffiMain)
             kotlin.srcDir(layout.buildDirectory.dir("generated/nativeMain/kotlin"))
         }
-        // val jsMain by getting {
-        //     // JS Main is separate and does NOT depend on Uniffi code
-        //     dependencies {
-        //         implementation(npm("@noble/hashes", "1.3.1"))
-        //         implementation(libs.kotlin.web)
-        //         implementation(libs.kotlin.node)
-        //     }
-        // }
-        // all {
-        //     languageSettings {
-        //         optIn("kotlin.RequiresOptIn")
-        //         optIn("kotlinx.cinterop.ExperimentalForeignApi")
-        //     }
-        // }
+        val jsMain by getting {
+            // JS Main is separate and does NOT depend on Uniffi code
+            dependencies {
+                implementation(npm("@noble/hashes", "1.3.1"))
+                implementation(libs.kotlin.web)
+                implementation(libs.kotlin.node)
+            }
+        }
+        all {
+            languageSettings {
+                optIn("kotlin.RequiresOptIn")
+                optIn("kotlinx.cinterop.ExperimentalForeignApi")
+            }
+        }
     }
 
     targets.withType<org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget>().configureEach {
@@ -244,26 +227,17 @@ kotlin {
         val rustArch = archMapping[currentTarget] ?: error("Unsupported target $currentTarget for Rust arch mapping.")
 
         compilations["main"].cinterops.create("ed25519_bip32_wrapper") {
-            // This structure is from your original file.
             val interopDir = layout.buildDirectory.dir("generated/nativeInterop/cinterop/headers/ed25519_bip32_wrapper").get().asFile
             val nativeLibDir = copyNativeLibsProvider.get().outputs.files.first().resolve("${currentTarget}Main/libs/$rustArch")
-
             packageName("ed25519_bip32_wrapper.cinterop")
             header(interopDir.resolve("ed25519_bip32_wrapper.h"))
-
-            // --- THE FIX ---
-            // The error indicates layout.projectDirectory.file() returns a RegularFile directly.
-            // We get it and then convert it to a java.io.File with .asFile for the defFile function.
             val defFileObject = layout.projectDirectory.file("src/nativeInterop/cinterop/ed25519_bip32_wrapper.def")
             defFile(defFileObject.asFile)
-
-            // Keep the rest the same as your original
             compilerOpts("-I${interopDir.absolutePath}")
             extraOpts("-libraryPath", nativeLibDir.absolutePath, "-staticLibrary", "libuniffi_ed25519_bip32_wrapper.a")
-            tasks[interopProcessingTaskName].dependsOn("prepareRustLibs")
+            tasks[interopProcessingTaskName].dependsOn("assembleRustLibs")
         }
     }
-
 }
 
 // === Group: Rust tasks Tasks ===
@@ -282,63 +256,26 @@ tasks.register<Exec>("buildRustWasm") {
     workingDir = wasmDir.asFile
     commandLine("./build_kotlin_library.sh")
     inputs.file(wasmDir.file("build_kotlin_library.sh"))
+    inputs.dir(wasmDir.dir("src"))
+    inputs.file(wasmDir.file("Cargo.toml"))
     outputs.dir(wasmOutputDir)
 }
 
-tasks.register<Copy>("copyWasmOutput") {
-    group = "rust"
-    description = "Copies Rust-generated Wasm."
-    dependsOn("buildRustWasm")
-    duplicatesStrategy = DuplicatesStrategy.INCLUDE
-    from(wasmOutputDir)
-    into(
-        rootDir
-            .resolve("build")
-            .resolve("js")
-            .resolve("packages")
-            .resolve("Apollo")
-            .resolve("kotlin")
-    )
-}
-
-tasks.register<Copy>("copyWasmOutputTest") {
-    group = "rust"
-    description = "Copies Rust-generated Wasm for testing."
-    dependsOn("buildRustWasm")
-    duplicatesStrategy = DuplicatesStrategy.INCLUDE
-    from(wasmOutputDir)
-    into(
-        rootDir
-            .resolve("build")
-            .resolve("js")
-            .resolve("packages")
-            .resolve("Apollo-test")
-            .resolve("kotlin")
-    )
-}
-
-tasks.register("prepareRustLibs") {
+tasks.register("assembleRustLibs") {
     group = "rust"
     description = "Aggregate task for building Rust wrappers and copying outputs."
     dependsOn(
         "buildRustWrapper",
         "buildRustWasm",
         "copyGeneratedKotlin",
-        "copyWasmOutput",
-        "copyWasmOutputTest",
         "copyNativeLibs"
     )
 }
 
 mavenPublishing {
     publishToMavenCentral()
-
-    // if (project.hasProperty("signingInMemoryKey")) {
     signAllPublications()
-    // }
-
     coordinates(group.toString(), "bip32-ed25519", rootProject.version.toString())
-
 
     pom {
         name.set("Identus bip32-ed25519")

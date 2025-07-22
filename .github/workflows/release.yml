@@ -2,25 +2,25 @@ name: Release
 
 on:
   workflow_dispatch:
-    # inputs:
-    #   version:
-    #     description: 'Version to release (e.g., 1.2.3)'
-    #     required: true
-    #   release_swift:
-    #     description: 'Release Swift package?'
-    #     type: boolean
-    #     required: false
-    #     default: true
-    #   release_maven:
-    #     description: 'Release JVM & Android to Maven?'
-    #     type: boolean
-    #     required: false
-    #     default: true
-    #   release_ts:
-    #     description: 'Release TypeScript package?'
-    #     type: boolean
-    #     required: false
-    #     default: true
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.2.3)'
+        required: true
+      release_swift:
+        description: 'Release Swift package?'
+        type: boolean
+        required: false
+        default: true
+      release_maven:
+        description: 'Release JVM & Android to Maven?'
+        type: boolean
+        required: false
+        default: true
+      release_ts:
+        description: 'Release TypeScript package?'
+        type: boolean
+        required: false
+        default: true
 
 permissions:
   contents: write
@@ -76,58 +76,58 @@ jobs:
       - name: Install wasm-pack
         run: cargo install wasm-pack
 
-      # - name: Update gradle.properties with new version
-      #   run: |
-      #     sed -i '' 's/^version = *.*.*/version = ${{ github.event.inputs.version }}/' gradle.properties
+      - name: Update gradle.properties with new version
+        run: |
+          sed -i '' 's/^version = *.*.*/version = ${{ github.event.inputs.version }}/' gradle.properties
 
-      # - name: Update yarn
-      #   run: |
-      #     ./gradlew kotlinUpgradeYarnLock
+      - name: Update yarn
+        run: |
+          ./gradlew kotlinUpgradeYarnLock
 
-      # - name: Build Kotlin Multiplatform Swift Artifacts
-      #   if: ${{ inputs.release_swift }}
-      #   run: |
-      #     ./gradlew :apollo:createSwiftPackage
+      - name: Build Kotlin Multiplatform Swift Artifacts
+        if: ${{ inputs.release_swift }}
+        run: |
+          ./gradlew :apollo:createSwiftPackage
 
       - name: Build Kotlin Multiplatform Maven Artifacts
-        # if: ${{ inputs.release_maven }}
+        if: ${{ inputs.release_maven }}
         run: |
           ./gradlew publishToMavenLocal --no-configuration-cache --stacktrace
 
-      # - name: Build Kotlin Multiplatform NPM Artifacts
-      #   if: ${{ inputs.release_ts }}
-      #   run: |
-      #     ./gradlew :apollo:assembleJsPackage
+      - name: Build Kotlin Multiplatform NPM Artifacts
+        if: ${{ inputs.release_ts }}
+        run: |
+          ./gradlew :apollo:assembleJsPackage
 
-      # - name: Prepare Swift XCFramework
-      #   if: ${{ inputs.release_swift }}
-      #   run: |
-      #     cd ./apollo/build/packages/ApolloSwift
-      #     zip -r Apollo.xcframework.zip Apollo.xcframework
-      #     cd ${{ github.workspace }}
-      #     checksum=$(swift package compute-checksum ./apollo/build/packages/ApolloSwift/Apollo.xcframework.zip)
-      #     sed -i.bak \
-      #       -e "s/checksum:.*/checksum: \"$checksum\"/" \
-      #       -e "s|download/.*/Apollo.xcframework.zip|download/v${{ github.event.inputs.version }}/Apollo.xcframework.zip|" \
-      #       Package.swift
+      - name: Prepare Swift XCFramework
+        if: ${{ inputs.release_swift }}
+        run: |
+          cd ./apollo/build/packages/ApolloSwift
+          zip -r Apollo.xcframework.zip Apollo.xcframework
+          cd ${{ github.workspace }}
+          checksum=$(swift package compute-checksum ./apollo/build/packages/ApolloSwift/Apollo.xcframework.zip)
+          sed -i.bak \
+            -e "s/checksum:.*/checksum: \"$checksum\"/" \
+            -e "s|download/.*/Apollo.xcframework.zip|download/v${{ github.event.inputs.version }}/Apollo.xcframework.zip|" \
+            Package.swift
 
       - name: Publish JVM & Android to Maven Central
         run: |
           ./gradlew publishToMavenCentral --no-configuration-cache
 
-      # - name: Publish TypeScript package to npm
-      #   if: ${{ inputs.release_ts }}
-      #   uses: actions/setup-node@v4
-      #   with:
-      #     node-version: '20'
-      #     registry-url: 'https://registry.npmjs.org'
+      - name: Publish TypeScript package to npm
+        if: ${{ inputs.release_ts }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
 
-      # - name: npm publish
-      #   if: ${{ inputs.release_ts }}
-      #   run: |
-      #     ./gradlew :apollo:publishJsPackageToNpmjsRegistry
-      #   env:
-      #     NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: npm publish
+        if: ${{ inputs.release_ts }}
+        run: |
+          ./gradlew :apollo:publishJsPackageToNpmjsRegistry
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       # - name: Commit updated files and tag the release
       #   uses: stefanzweifel/git-auto-commit-action@v5

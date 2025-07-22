@@ -1,36 +1,29 @@
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
-
-// import dev.petuska.npm.publish.extension.domain.NpmAccess
+import dev.petuska.npm.publish.extension.domain.NpmAccess
 // import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
-// import java.io.ByteArrayOutputStream
-// import com.vanniktech.maven.publish.SonatypeHost
+import java.io.ByteArrayOutputStream
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.android.kotlin.multiplatform.library)
     // alias(libs.plugins.dokka)
     alias(libs.plugins.maven.publish)
-    // alias(libs.plugins.npm.publish)
-    // alias(libs.plugins.swiftpackage)
-    // alias(libs.plugins.kover) apply false // https://github.com/Kotlin/kotlinx-kover/issues/747
+    alias(libs.plugins.npm.publish)
+    alias(libs.plugins.swiftpackage)
+    alias(libs.plugins.kover) apply false // https://github.com/Kotlin/kotlinx-kover/issues/747
 }
 
-// project.description = "Collection of cryptographic methods used across Identus platform."
-
-// val currentModuleName = "Apollo"
 val appleBinaryName = "ApolloLibrary"
-// val minimumIosVersion = "15.0"
-// val minimumMacOSVersion = "13.0"
+val minimumIosVersion = "15.0"
+val minimumMacOSVersion = "13.0"
 
 kotlin {
     applyDefaultHierarchyTemplate()
     compilerOptions {
         freeCompilerArgs.addAll("-Xexpect-actual-classes",)
     }
-
     jvm()
     androidLibrary {
         namespace = "dev.allain"
@@ -72,33 +65,30 @@ kotlin {
             baseName = appleBinaryName
         }
     }
-    // js(IR) {
-    //     outputModuleName = currentModuleName
-    //     binaries.library()
-    //     useCommonJs()
-    //     generateTypeScriptDefinitions()
-    //     this.compilations["main"].packageJson {
-    //         this.version = rootProject.version.toString()
-    //     }
-    //     this.compilations["test"].packageJson {
-    //         this.version = rootProject.version.toString()
-    //     }
-    //     browser {
-    //         webpackTask {
-    //             output.library = currentModuleName
-    //             output.libraryTarget = org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackOutput.Target.VAR
-    //         }
-    //         testTask {
-    //             useKarma { useChromeHeadless() }
-    //         }
-    //     }
-    //     nodejs {
-    //         testTask {
-    //             useKarma { useChromeHeadless() }
-    //         }
-    //     }
-    // }
-
+    js(IR) {
+        outputModuleName = "apollo"
+        binaries.library()
+        useCommonJs()
+        generateTypeScriptDefinitions()
+        browser {
+            webpackTask {
+                output.library = "apollo"
+                output.libraryTarget = org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackOutput.Target.VAR
+            }
+            testTask {
+                useKarma {
+                    useChromeHeadless()
+                }
+            }
+        }
+        nodejs {
+            testTask {
+                useMocha {
+                    timeout = "30s"
+                }
+            }
+        }
+    }
     sourceSets {
         commonMain.dependencies {
             implementation(project(":bip32-ed25519"))
@@ -132,44 +122,42 @@ kotlin {
         jvmTest.dependencies {
             implementation(libs.junit)
         }
-        // jsMain.dependencies {
-        //     implementation(npm("elliptic", "6.6.1"))
-        //     implementation(npm("@types/elliptic", "6.4.18"))
-        //     implementation(npm("@noble/curves", "1.2.0"))
-        //     implementation(npm("@stablelib/x25519", "1.0.3"))
-        //     implementation(npm("hash.js", "1.1.7"))
-        //     implementation(npm("@noble/hashes", "1.3.1"))
-        //     implementation(npm("stream-browserify", "3.0.0"))
-        //     implementation(npm("buffer", "6.0.3"))
-        //     implementation(libs.kotlin.web)
-        //     implementation(libs.kotlin.node)
-        // }
-        // jsTest.dependencies {
-        //     implementation(npm("url", "0.11.4"))
-        // }
+        jsMain.dependencies {
+            implementation(npm("elliptic", "6.6.1"))
+            implementation(npm("@types/elliptic", "6.4.18"))
+            implementation(npm("@noble/curves", "1.2.0"))
+            implementation(npm("@stablelib/x25519", "1.0.3"))
+            implementation(npm("hash.js", "1.1.7"))
+            implementation(npm("@noble/hashes", "1.3.1"))
+            implementation(npm("stream-browserify", "3.0.0"))
+            implementation(npm("buffer", "6.0.3"))
+            implementation(libs.kotlin.web)
+            implementation(libs.kotlin.node)
+        }
+        jsTest.dependencies {
+            implementation(npm("url", "0.11.4"))
+        }
         nativeMain.dependencies {
             implementation(project(":bip32-ed25519"))
             implementation(project(":secp256k1-kmp"))
         }
-        // all {
-        //     languageSettings {
-        //         optIn("kotlin.RequiresOptIn")
-        //         optIn("kotlinx.cinterop.ExperimentalForeignApi")
-        //     }
-        // }
+        all {
+            languageSettings {
+                optIn("kotlin.RequiresOptIn")
+                optIn("kotlinx.cinterop.ExperimentalForeignApi")
+            }
+        }
     }
-
-    // multiplatformSwiftPackage {
-    //     packageName("Apollo")
-    //     swiftToolsVersion("5.9")
-    //     targetPlatforms {
-    //         iOS { v(minimumIosVersion) }
-    //         macOS { v(minimumMacOSVersion) }
-    //     }
-    //     outputDirectory(File(rootDir, "apollo/build/packages/ApolloSwift"))
-    // }
+    multiplatformSwiftPackage {
+        packageName("Apollo")
+        swiftToolsVersion("5.9")
+        targetPlatforms {
+            iOS { v(minimumIosVersion) }
+            macOS { v(minimumMacOSVersion) }
+        }
+        outputDirectory(File(rootDir, "apollo/build/packages/ApolloSwift"))
+    }
 }
-
 
 // tasks.withType<DokkaTask>().configureEach {
 //     moduleName.set(currentModuleName)
@@ -245,68 +233,111 @@ fun KotlinNativeTarget.swiftCinterop(library: String, platform: String) {
     }
 }
 
-// === Group: Resource and Test Task Dependencies ===
-// val swiftPackageUpdateMinOSVersion =
-//     tasks.register("updateMinOSVersion") {
-//         group = "multiplatform-swift-package"
-//         description =
-//             "Updates the minimum OS version of the plists in the xcframework, known issue of the KMP SwiftPackage plugin"
-//         dependsOn("createSwiftPackage")
+/* JS Wasm */
+tasks.register<Copy>("copyBip32Wasm") {
+    group = "js-build"
+    description = "Copy ed25519_bip32_wasm.js to apollo js build directory."
+    val buildRustWasmTaskProvider = project(":bip32-ed25519").tasks.named("buildRustWasm")
+    dependsOn(buildRustWasmTaskProvider)
+    from(project(":bip32-ed25519").layout.projectDirectory.dir("rust-ed25519-bip32/wasm/build"))
+    into(rootProject.layout.buildDirectory.dir("js/packages/apollo/kotlin"))
+}
+tasks.named("jsBrowserProductionLibraryDistribution") {
+    dependsOn("copyBip32Wasm")
+}
+tasks.named("jsNodeProductionLibraryDistribution") {
+    dependsOn("copyBip32Wasm")
+}
 
-//         val xcframeworkDir = layout.projectDirectory.file("build/packages/ApolloSwift/Apollo.xcframework").asFile
+/* JS Wasm + Testing */
+tasks.register<Copy>("copyBip32WasmTest") {
+    group = "js-build"
+    description = "Copy ed25519_bip32_wasm.js to apollo js test build directory."
+    val buildRustWasmTaskProvider = project(":bip32-ed25519").tasks.named("buildRustWasm")
+    dependsOn(buildRustWasmTaskProvider)
+    from(project(":bip32-ed25519").layout.projectDirectory.dir("rust-ed25519-bip32/wasm/build"))
+    into(rootProject.layout.buildDirectory.dir("js/packages/apollo-test/kotlin"))
+}
+tasks.named("jsBrowserTest") {
+    dependsOn("copyBip32WasmTest")
+}
+tasks.named("jsNodeTest") {
+    dependsOn("copyBip32WasmTest")
+}
 
-//         doLast {
-//             val frameworkPaths =
-//                 mapOf(
-//                     "ios-arm64/ApolloLibrary.framework" to "ios-arm64/ApolloLibrary.framework/ApolloLibrary",
-//                     "ios-arm64_x86_64-simulator/ApolloLibrary.framework" to "ios-arm64_x86_64-simulator/ApolloLibrary.framework/ApolloLibrary"
-//                 )
+/* NPM Publication Wasm */
+val npmBip32Wasm by tasks.registering(Copy::class) {
+    group = "js-build"
+    description = "Copy ed25519_bip32_wasm.js to npm publication directory."
+    val buildRustWasmTaskProvider = project(":bip32-ed25519").tasks.named("buildRustWasm")
+    dependsOn(buildRustWasmTaskProvider)
+    from(project(":bip32-ed25519").layout.projectDirectory.dir("rust-ed25519-bip32/wasm/build"))
+    into(layout.buildDirectory.dir("packages/js"))
+}
+tasks.named("assembleJsPackage") {
+    finalizedBy("npmBip32Wasm")
+}
 
-//             frameworkPaths.forEach { (plistFolder, binaryRelativePath) ->
-//                 val binaryFile = xcframeworkDir.resolve(binaryRelativePath)
-//                 val plistFile = xcframeworkDir.resolve("$plistFolder/Info.plist")
+val swiftPackageUpdateMinOSVersion =
+    tasks.register("updateMinOSVersion") {
+        group = "multiplatform-swift-package"
+        description =
+            "Updates the minimum OS version of the plists in the xcframework, known issue of the KMP SwiftPackage plugin"
+        dependsOn("createSwiftPackage")
 
-//                 if (binaryFile.exists() && plistFile.exists()) {
-//                     val currentMinOS =
-//                         ByteArrayOutputStream().use { outputStream ->
-//                             providers.exec {
-//                                 commandLine("otool", "-l", binaryFile.absolutePath)
-//                                 standardOutput = outputStream
-//                             }
-//                             outputStream
-//                                 .toString()
-//                                 .lines()
-//                                 .firstOrNull { it.contains("minos") }
-//                                 ?.trim()
-//                                 ?.split(" ")
-//                                 ?.lastOrNull()
-//                                 ?: throw GradleException("Could not determine min OS version from binary")
-//                         }
+        val xcframeworkDir = layout.projectDirectory.file("build/packages/ApolloSwift/Apollo.xcframework").asFile
 
-//                     providers.exec {
-//                         commandLine(
-//                             "/usr/libexec/PlistBuddy",
-//                             "-c",
-//                             "Set :MinimumOSVersion $currentMinOS",
-//                             plistFile.absolutePath
-//                         )
-//                     }
+        doLast {
+            val frameworkPaths =
+                mapOf(
+                    "ios-arm64/ApolloLibrary.framework" to "ios-arm64/ApolloLibrary.framework/ApolloLibrary",
+                    "ios-arm64_x86_64-simulator/ApolloLibrary.framework" to "ios-arm64_x86_64-simulator/ApolloLibrary.framework/ApolloLibrary"
+                )
 
-//                     println("Updated $plistFile with MinimumOSVersion = $currentMinOS")
-//                 } else {
-//                     println("Required files not found: binary=$binaryFile, plist=$plistFile")
-//                 }
-//             }
-//         }
-//     }
+            frameworkPaths.forEach { (plistFolder, binaryRelativePath) ->
+                val binaryFile = xcframeworkDir.resolve(binaryRelativePath)
+                val plistFile = xcframeworkDir.resolve("$plistFolder/Info.plist")
 
-// afterEvaluate {
-//     if (tasks.findByName("createSwiftPackage") != null) {
-//         tasks.named("createSwiftPackage").configure {
-//             finalizedBy(swiftPackageUpdateMinOSVersion)
-//         }
-//     }
-// }
+                if (binaryFile.exists() && plistFile.exists()) {
+                    val currentMinOS =
+                        ByteArrayOutputStream().use { outputStream ->
+                            exec {
+                                commandLine("otool", "-l", binaryFile.absolutePath)
+                                standardOutput = outputStream
+                            }
+                            outputStream
+                                .toString()
+                                .lines()
+                                .firstOrNull { it.contains("minos") }
+                                ?.trim()
+                                ?.split(" ")
+                                ?.lastOrNull()
+                                ?: throw GradleException("Could not determine min OS version from binary")
+                        }
+
+                    exec {
+                        commandLine(
+                            "/usr/libexec/PlistBuddy",
+                            "-c",
+                            "Set :MinimumOSVersion $currentMinOS",
+                            plistFile.absolutePath
+                        )
+                    }
+                    println("Updated $plistFile with MinimumOSVersion = $currentMinOS")
+                } else {
+                    println("Required files not found: binary=$binaryFile, plist=$plistFile")
+                }
+            }
+        }
+    }
+
+afterEvaluate {
+    if (tasks.findByName("createSwiftPackage") != null) {
+        tasks.named("createSwiftPackage").configure {
+            finalizedBy(swiftPackageUpdateMinOSVersion)
+        }
+    }
+}
 
 // Configure Dokka tasks uniformly
 // tasks.withType<DokkaTask>().configureEach {
@@ -316,10 +347,7 @@ fun KotlinNativeTarget.swiftCinterop(library: String, platform: String) {
 
 mavenPublishing {
     publishToMavenCentral()
-
-    // if (project.hasProperty("signingInMemoryKey")) {
     signAllPublications()
-    // }
 
     coordinates(group.toString(), "apollo", rootProject.version.toString())
 
@@ -407,33 +435,32 @@ mavenPublishing {
     }
 }
 
-
-// npmPublish {
-//     organization.set("hyperledger")
-//     version.set(rootProject.version.toString())
-//     access.set(NpmAccess.PUBLIC)
-//     packages {
-//         access.set(NpmAccess.PUBLIC)
-//         named("js") {
-//             scope.set("hyperledger")
-//             packageName.set("identus-apollo")
-//             readme.set(rootDir.resolve("README.md"))
-//             packageJson {
-//                 author {
-//                     name.set("IOG")
-//                 }
-//                 repository {
-//                     type.set("git")
-//                     url.set("https://github.com/hyperledger-identus/apollo")
-//                 }
-//             }
-//         }
-//     }
-//     registries {
-//         access.set(NpmAccess.PUBLIC)
-//         register("npmjs") {
-//             uri.set("https://registry.npmjs.org")
-//             authToken.set(System.getenv("NPM_TOKEN"))
-//         }
-//     }
-// }
+npmPublish {
+    organization.set("@amagyar-iohk")
+    version.set(rootProject.version.toString())
+    access.set(NpmAccess.PUBLIC)
+    packages {
+        access.set(NpmAccess.PUBLIC)
+        named("js") {
+            scope.set("@amagyar-iohk")
+            packageName.set("identus-apollo")
+            readme.set(rootProject.layout.projectDirectory.file("README.md"))
+            packageJson {
+                author {
+                    name.set("IOG")
+                }
+                repository {
+                    type.set("git")
+                    url.set("https://github.com/hyperledger-identus/apollo")
+                }
+            }
+        }
+    }
+    registries {
+        access.set(NpmAccess.PUBLIC)
+        register("npmjs") {
+            uri.set("https://registry.npmjs.org")
+            authToken.set(System.getenv("NPM_TOKEN"))
+        }
+    }
+}

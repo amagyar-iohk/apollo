@@ -1,4 +1,4 @@
-import org.jetbrains.kotlin.gradle.targets.js.yarn.YarnRootExtension
+// import org.jetbrains.kotlin.gradle.targets.js.yarn.YarnRootExtension
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform) apply false
@@ -12,10 +12,6 @@ group = "dev.allain"
 
 allprojects {
     group = rootProject.group
-    // rootProject.plugins.withType<org.jetbrains.kotlin.gradle.targets.js.yarn.YarnPlugin> {
-    //     rootProject.the<YarnRootExtension>().reportNewYarnLock = true
-    //     rootProject.the<YarnRootExtension>().yarnLockAutoReplace = true
-    // }
 }
 
 subprojects {

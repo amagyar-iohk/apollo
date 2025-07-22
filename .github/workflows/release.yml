@@ -87,7 +87,7 @@ jobs:
       - name: Build Kotlin Multiplatform Swift Artifacts
         if: ${{ inputs.release_swift }}
         run: |
-          ./gradlew :apollo:createSwiftPackage
+          ./gradlew :apollo:createSwiftPackage --no-configuration-cache
 
       - name: Build Kotlin Multiplatform Maven Artifacts
         if: ${{ inputs.release_maven }}

@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import dev.petuska.npm.publish.extension.domain.NpmAccess
-// import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import dev.petuska.npm.publish.task.NpmPublishTask
 import java.io.ByteArrayOutputStream
 
 plugins {
@@ -301,7 +301,7 @@ val swiftPackageUpdateMinOSVersion =
                 if (binaryFile.exists() && plistFile.exists()) {
                     val currentMinOS =
                         ByteArrayOutputStream().use { outputStream ->
-                            exec {
+                            project.exec {
                                 commandLine("otool", "-l", binaryFile.absolutePath)
                                 standardOutput = outputStream
                             }
@@ -315,7 +315,7 @@ val swiftPackageUpdateMinOSVersion =
                                 ?: throw GradleException("Could not determine min OS version from binary")
                         }
 
-                    exec {
+                    project.exec {
                         commandLine(
                             "/usr/libexec/PlistBuddy",
                             "-c",

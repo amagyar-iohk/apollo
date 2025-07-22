@@ -116,7 +116,7 @@ jobs:
         run: |
           ./gradlew publishToMavenCentral --no-configuration-cache
 
-      - name: Publish TypeScript package to npm
+      - name: Publish Node package to npm
         if: ${{ inputs.release_ts }}
         uses: actions/setup-node@v4
         with:

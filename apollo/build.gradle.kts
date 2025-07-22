@@ -274,7 +274,7 @@ val npmBip32Wasm by tasks.registering(Copy::class) {
     from(project(":bip32-ed25519").layout.projectDirectory.dir("rust-ed25519-bip32/wasm/build"))
     into(layout.buildDirectory.dir("packages/js"))
 }
-tasks.named("publishJsPackageToNpmjsRegistry") {
+tasks.withType<NpmPublishTask>().configureEach {
     dependsOn("npmBip32Wasm")
 }
 

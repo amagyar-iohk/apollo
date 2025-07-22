@@ -436,13 +436,13 @@ mavenPublishing {
 }
 
 npmPublish {
-    organization.set("@amagyar-iohk")
+    organization.set("amagyar-iohk")
     version.set(rootProject.version.toString())
     access.set(NpmAccess.PUBLIC)
     packages {
         access.set(NpmAccess.PUBLIC)
         named("js") {
-            scope.set("@amagyar-iohk")
+            scope.set("amagyar-iohk")
             packageName.set("identus-apollo")
             readme.set(rootProject.layout.projectDirectory.file("README.md"))
             packageJson {

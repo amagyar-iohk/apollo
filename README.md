@@ -213,7 +213,7 @@ Inside the `package.json`
 ```json
 {
     "dependencies": {
-        "@atala/apollo": "<latest version>"
+        "@hyperledger/identus-apollo": "<latest version>"
     }
 }
 ```

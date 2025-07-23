@@ -144,10 +144,7 @@ jobs:
           commit_message: |
             chore(release): v${{ github.event.inputs.version }}
           tagging_message: v${{ github.event.inputs.version }}
-          file_pattern: |
-            Package.swift
-            ApolloLibrary.podspec
-            gradle.properties
+          file_pattern: Package.swift ApolloLibrary.podspec gradle.properties
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2

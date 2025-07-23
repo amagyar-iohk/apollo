@@ -18,7 +18,7 @@ let package = Package(
         // LOCAL
 //          .binaryTarget(
 //              name: "ApolloBinary",
-//              path: "./apollo/build/packages/ApolloSwift/Apollo.xcframework.zip"
+//              path: "./apollo/build/packages/ApolloSwift/ApolloBinary.xcframework.zip"
 //          ),
 
         // RELEASE

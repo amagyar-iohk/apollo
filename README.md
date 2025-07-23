@@ -1,22 +1,15 @@
 # Apollo
+![License](https://img.shields.io/badge/license-Apache%20License%202.0-blue?logo=apache)
+![Kotlin](https://img.shields.io/badge/kotlin-2.2.0-blue?logo=kotlin)
+![Gradle](https://img.shields.io/badge/gradle-8.13-blue?logo=gradle)
 
-[![Kotlin](https://img.shields.io/badge/kotlin-1.9.22-blue.svg?logo=kotlin)](http://kotlinlang.org)
-![badge-license]
-![badge-latest-release]
-[![semantic-release-kotlin]](https://github.com/semantic-release/semantic-release)
+[![Sonatype](https://img.shields.io/maven-central/v/org.hyperledger.identus/apollo?logo=sonatype&label=maven&color=blue&logoColor=1B1C30)](https://central.sonatype.com/artifact/org.hyperledger.identus/apollo)
+[![NPM](https://img.shields.io/npm/v/%40hyperledger%2Fidentus-apollo?logo=npm&label=npm&logoColor=CB3837)](https://www.npmjs.com/package/@hyperledger/identus-apollo)
+[![Swift](https://img.shields.io/github/v/release/hyperledger-identus/apollo?logo=swift&label=spm)](https://github.com/hyperledger-identus/apollo/releases)
 
-![badge-platform-android]
-![badge-platform-ios]
-![badge-platform-jvm]
-![badge-platform-js]
-![badge-platform-js-node]
+---
 
 A cryptography lib built with Kotlin Multiplatform with support for the following targets:
-
-- JS
-- iOS
-- Android
-- JVM
 
 ## How to build Apollo
 
@@ -183,11 +176,11 @@ dependencies: [
 ### Using generated xcframework directly
 
 The following instruction using Xcode 15
-1. Go the [Release Page](https://github.com/hyperledger-identus/apollo/releases) and check the latest version and download the `Apollo.xcframework.zip` file.
+1. Go the [Release Page](https://github.com/hyperledger-identus/apollo/releases) and check the latest version and download the `ApolloBinary.xcframework.zip` file.
 2. Uncompress the downloaded file.
-3. Add the `Apollo.xcframework` to your Xcode project.
+3. Add the `ApolloBinary.xcframework` to your Xcode project.
 4. When asked select Copy items if needed.
-5. Then go to the project configuration page in Xcode and check the Frameworks and Libraries section and add the `Apollo.xcframework` if not found then choose `Embed & Sign`.
+5. Then go to the project configuration page in Xcode and check the Frameworks and Libraries section and add the `ApolloBinary.xcframework` if not found then choose `Embed & Sign`.
 6. Then go to the build phase page and mark the framework as required.
 
 [!WARNING]
@@ -293,15 +286,3 @@ This software is provided 'as-is', without any express or implied warranty. In n
 authors be held liable for any damages arising from the use of this software. Permission is granted
 to anyone to use this software for any purpose, including commercial applications, and to alter it
 and redistribute it freely.
-
-<!-- TAG_VERSION -->
-[badge-latest-release]: https://img.shields.io/badge/latest--release-1.2.10-blue.svg?style=flat
-[badge-license]: https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat
-[semantic-release-kotlin]: https://img.shields.io/badge/semantic--release-kotlin-blue?logo=semantic-release
-
-<!-- TAG_PLATFORMS -->
-[badge-platform-android]: http://img.shields.io/badge/-android-6EDB8D.svg?style=flat
-[badge-platform-ios]: http://img.shields.io/badge/-ios-CDCDCD.svg?style=flat
-[badge-platform-jvm]: http://img.shields.io/badge/-jvm-DB413D.svg?style=flat
-[badge-platform-js]: http://img.shields.io/badge/-js-F8DB5D.svg?style=flat
-[badge-platform-js-node]: https://img.shields.io/badge/-nodejs-68a063.svg?style=flat

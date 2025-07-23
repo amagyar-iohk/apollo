@@ -155,6 +155,6 @@ jobs:
         with:
           tag_name: v${{ github.event.inputs.version }}
           files: |
-            ./apollo/build/packages/ApolloSwift/Apollo.xcframework.zip
+            ./apollo/build/packages/ApolloSwift/ApolloLibrary.xcframework.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

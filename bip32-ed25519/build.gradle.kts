@@ -90,8 +90,8 @@ kotlin {
     }
     androidLibrary {
         namespace = "org.hyperledger.identus.apollo.bip32ed25519"
-        compileSdk = 34
-        minSdk = 21
+        compileSdk = libs.versions.android.compileSdk.get().toInt()
+        minSdk = libs.versions.android.minSdk.get().toInt()
     }
     iosArm64 {
         binaries.framework {
@@ -171,7 +171,7 @@ kotlin {
         val uniffiTest by creating {
             dependsOn(commonTest)
         }
-        val jvmMain by getting {
+        jvmMain {
             dependsOn(uniffiMain)
             kotlin.srcDir(layout.buildDirectory.dir("generated/jvmMain/kotlin"))
             resources.srcDir(copyNativeLibsProvider.map { it.outputs.files.first().resolve("jvmMain/libs") })
@@ -179,14 +179,14 @@ kotlin {
                 implementation(libs.jna)
             }
         }
-        val jvmTest by getting {
+        jvmTest {
             dependsOn(uniffiTest)
             dependencies {
                 implementation(libs.bignum)
                 implementation(libs.junit)
             }
         }
-        val androidMain by getting {
+        androidMain {
             dependsOn(uniffiMain)
             kotlin.srcDir(layout.buildDirectory.dir("generated/androidMain/kotlin"))
             resources.srcDir(copyGeneratedKotlinProvider.map { it.destinationDir.resolve("androidMain/baselineProfiles") })
@@ -194,11 +194,11 @@ kotlin {
                 implementation("net.java.dev.jna:jna:5.13.0")
             }
         }
-        val nativeMain by getting {
+        nativeMain {
             dependsOn(uniffiMain)
             kotlin.srcDir(layout.buildDirectory.dir("generated/nativeMain/kotlin"))
         }
-        val jsMain by getting {
+        jsMain {
             // JS Main is separate and does NOT depend on Uniffi code
             dependencies {
                 implementation(npm("@noble/hashes", "1.3.1"))
@@ -276,24 +276,20 @@ mavenPublishing {
     publishToMavenCentral()
     signAllPublications()
     coordinates(group.toString(), "bip32-ed25519", rootProject.version.toString())
-
     pom {
         name.set("Identus bip32-ed25519")
         description.set("Identus Bip32 HD Keys in Ed25519.")
         url.set("https://hyperledger-identus.github.io/docs/")
-
         organization {
             name.set("Hyperledger")
             url.set("https://www.hyperledger.org/")
         }
-
         licenses {
             license {
                 name.set("The Apache License, Version 2.0")
                 url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
             }
         }
-
         developers {
             developer {
                 id.set("hamada147")
@@ -352,7 +348,6 @@ mavenPublishing {
                 roles.add("developer")
             }
         }
-
         scm {
             connection.set("scm:git:git://git@github.com/hyperledger/identus-apollo.git")
             developerConnection.set("scm:git:ssh://git@github.com/hyperledger/identus-apollo.git")

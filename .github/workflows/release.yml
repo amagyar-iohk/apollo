@@ -55,7 +55,7 @@ jobs:
       - name: Install Dependencies
         run: |
           brew install messense/macos-cross-toolchains/aarch64-unknown-linux-gnu
-          brew install autoconf automake libtool x86_64-unknown-linux-gnu
+          brew install autoconf automake x86_64-unknown-linux-gnu
 
       - name: Install Rust Targets
         run: |
@@ -76,28 +76,31 @@ jobs:
       - name: Install wasm-pack
         run: cargo install wasm-pack
 
+      - name: Setup node
+        if: ${{ inputs.release_ts }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
       - name: Update gradle.properties with new version
         run: |
           sed -i '' 's/^version = *.*.*/version = ${{ github.event.inputs.version }}/' gradle.properties
 
       - name: Update yarn
-        run: |
-          ./gradlew kotlinUpgradeYarnLock
+        run: ./gradlew kotlinUpgradeYarnLock
 
       - name: Build Kotlin Multiplatform Swift Artifacts
         if: ${{ inputs.release_swift }}
-        run: |
-          ./gradlew :apollo:createSwiftPackage --no-configuration-cache
+        run: ./gradlew :apollo:createSwiftPackage --no-configuration-cache
 
       - name: Build Kotlin Multiplatform Maven Artifacts
         if: ${{ inputs.release_maven }}
-        run: |
-          ./gradlew publishToMavenLocal --no-configuration-cache --stacktrace
+        run: ./gradlew publishToMavenLocal --no-configuration-cache
 
       - name: Build Kotlin Multiplatform NPM Artifacts
         if: ${{ inputs.release_ts }}
-        run: |
-          ./gradlew :apollo:assembleJsPackage
+        run: ./gradlew :apollo:assembleJsPackage
 
       - name: Prepare Swift XCFramework
         if: ${{ inputs.release_swift }}
@@ -121,20 +124,13 @@ jobs:
 
       - name: Publish JVM & Android to Maven Central
         if: ${{ inputs.release_maven }}
-        run: |
-          ./gradlew publishToMavenCentral --no-configuration-cache
+        env:
+          ORG_GRADLE_PROJECT_autoRelease: true
+        run: ./gradlew publishToMavenCentral --no-configuration-cache
 
-      - name: Publish Node package to npm
+      - name: NPM publish
         if: ${{ inputs.release_ts }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          registry-url: 'https://registry.npmjs.org'
-
-      - name: npm publish
-        if: ${{ inputs.release_ts }}
-        run: |
-          ./gradlew :apollo:publishJsPackageToNpmjsRegistry
+        run: ./gradlew :apollo:publishJsPackageToNpmjsRegistry
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 

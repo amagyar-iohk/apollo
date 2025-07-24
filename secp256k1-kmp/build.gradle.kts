@@ -10,7 +10,7 @@ kotlin {
     macosX64()
     applyDefaultHierarchyTemplate()
     sourceSets {
-        val commonMain by getting {
+        commonMain {
             dependencies {
                 api(libs.bignum)
             }
@@ -49,10 +49,12 @@ kotlin {
             val nativeBuildDir = project(":secp256k1-kmp:native").layout.buildDirectory
             val binaryProvider = nativeBuildDir.file(binaryPathString)
 
-            compilerOptions.configure {
-                freeCompilerArgs.addAll(
-                    listOf("-include-binary", binaryProvider.get().asFile.absolutePath)
-                )
+            compileTaskProvider.configure {
+                compilerOptions {
+                    freeCompilerArgs.addAll(
+                        listOf("-include-binary", binaryProvider.get().asFile.absolutePath)
+                    )
+                }
             }
         }
     }

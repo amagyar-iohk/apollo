@@ -5,8 +5,6 @@ plugins {
 val bash = "bash"
 val currentOs = org.gradle.internal.os.OperatingSystem.current()
 
-fun Task.outputDir(path: String) = outputs.dir(layout.buildDirectory.dir(path))
-
 // A single task for all macOS architectures
 tasks.register<Exec>("buildSecp256k1Macos") {
     group = "native build"

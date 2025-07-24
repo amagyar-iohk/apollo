@@ -1,14 +1,13 @@
-import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import dev.petuska.npm.publish.extension.domain.NpmAccess
 import dev.petuska.npm.publish.task.NpmPublishTask
-import java.io.ByteArrayOutputStream
+import org.jetbrains.dokka.gradle.DokkaTask
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
+import java.net.URI
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.android.kotlin.multiplatform.library)
-    // alias(libs.plugins.dokka)
+    alias(libs.plugins.dokka)
     alias(libs.plugins.maven.publish)
     alias(libs.plugins.npm.publish)
     alias(libs.plugins.swiftpackage)
@@ -22,7 +21,7 @@ val minimumMacOSVersion = "13.0"
 kotlin {
     applyDefaultHierarchyTemplate()
     compilerOptions {
-        freeCompilerArgs.addAll("-Xexpect-actual-classes",)
+        freeCompilerArgs.addAll("-Xexpect-actual-classes")
     }
     jvm()
     androidLibrary {
@@ -159,44 +158,44 @@ kotlin {
     }
 }
 
-// tasks.withType<DokkaTask>().configureEach {
-//     moduleName.set(currentModuleName)
-//     moduleVersion.set(rootProject.version.toString())
-//     description = "This is a Kotlin Multiplatform Library for cryptography"
-//     dokkaSourceSets {
-//         configureEach {
-//             jdkVersion.set(17)
-//             languageVersion.set("1.9.22")
-//             apiVersion.set("2.0")
-//             includes.from(
-//                 "docs/Apollo.md",
-//                 "docs/Base64.md",
-//                 "docs/SecureRandom.md"
-//             )
-//             sourceLink {
-//                 localDirectory.set(projectDir.resolve("src"))
-//                 remoteUrl.set(URI("https://github.com/hyperledger-identus/apollo/tree/main/src").toURL())
-//                 remoteLineSuffix.set("#L")
-//             }
-//             externalDocumentationLink {
-//                 url.set(URI("https://kotlinlang.org/api/latest/jvm/stdlib/").toURL())
-//             }
-//             externalDocumentationLink {
-//                 url.set(URI("https://kotlinlang.org/api/kotlinx.serialization/").toURL())
-//             }
-//             externalDocumentationLink {
-//                 url.set(URI("https://api.ktor.io/").toURL())
-//             }
-//             externalDocumentationLink {
-//                 url.set(URI("https://kotlinlang.org/api/kotlinx-datetime/").toURL())
-//                 packageListUrl.set(URI("https://kotlinlang.org/api/kotlinx-datetime/").toURL())
-//             }
-//             externalDocumentationLink {
-//                 url.set(URI("https://kotlinlang.org/api/kotlinx.coroutines/").toURL())
-//             }
-//         }
-//     }
-// }
+tasks.withType<DokkaTask>().configureEach {
+    moduleName.set("Apollo")
+    moduleVersion.set(rootProject.version.toString())
+    description = "This is a Kotlin Multiplatform Library for cryptography"
+    dokkaSourceSets {
+        configureEach {
+            jdkVersion.set(17)
+            languageVersion.set("1.9.22")
+            apiVersion.set("2.0")
+            includes.from(
+                "docs/Apollo.md",
+                "docs/Base64.md",
+                "docs/SecureRandom.md"
+            )
+            sourceLink {
+                localDirectory.set(projectDir.resolve("src"))
+                remoteUrl.set(URI("https://github.com/hyperledger-identus/apollo/tree/main/src").toURL())
+                remoteLineSuffix.set("#L")
+            }
+            externalDocumentationLink {
+                url.set(URI("https://kotlinlang.org/api/latest/jvm/stdlib/").toURL())
+            }
+            externalDocumentationLink {
+                url.set(URI("https://kotlinlang.org/api/kotlinx.serialization/").toURL())
+            }
+            externalDocumentationLink {
+                url.set(URI("https://api.ktor.io/").toURL())
+            }
+            externalDocumentationLink {
+                url.set(URI("https://kotlinlang.org/api/kotlinx-datetime/").toURL())
+                packageListUrl.set(URI("https://kotlinlang.org/api/kotlinx-datetime/").toURL())
+            }
+            externalDocumentationLink {
+                url.set(URI("https://kotlinlang.org/api/kotlinx.coroutines/").toURL())
+            }
+        }
+    }
+}
 
 /**
  * Adds a Swift interop configuration for a library.
@@ -266,7 +265,7 @@ tasks.named("jsNodeTest") {
 }
 
 /* NPM Publication Wasm */
-val npmBip32Wasm by tasks.registering(Copy::class) {
+tasks.registering(Copy::class) {
     group = "js-build"
     description = "Copy ed25519_bip32_wasm.js to npm publication directory."
     val buildRustWasmTaskProvider = project(":bip32-ed25519").tasks.named("buildRustWasm")
@@ -285,7 +284,8 @@ val swiftPackageUpdateMinOSVersion =
             "Updates the minimum OS version of the plists in the xcframework, known issue of the KMP SwiftPackage plugin"
         dependsOn("createSwiftPackage")
 
-        val xcframeworkDir = layout.projectDirectory.file("build/packages/ApolloSwift/$appleBinaryName.xcframework").asFile
+        val xcframeworkDir =
+            layout.projectDirectory.file("build/packages/ApolloSwift/$appleBinaryName.xcframework").asFile
 
         doLast {
             val frameworkPaths =
@@ -299,23 +299,19 @@ val swiftPackageUpdateMinOSVersion =
                 val plistFile = xcframeworkDir.resolve("$plistFolder/Info.plist")
 
                 if (binaryFile.exists() && plistFile.exists()) {
-                    val currentMinOS =
-                        ByteArrayOutputStream().use { outputStream ->
-                            project.exec {
-                                commandLine("otool", "-l", binaryFile.absolutePath)
-                                standardOutput = outputStream
-                            }
-                            outputStream
-                                .toString()
-                                .lines()
-                                .firstOrNull { it.contains("minos") }
-                                ?.trim()
-                                ?.split(" ")
-                                ?.lastOrNull()
-                                ?: throw GradleException("Could not determine min OS version from binary")
-                        }
-
-                    project.exec {
+                    val otoolOutput = providers.exec {
+                        isIgnoreExitValue = true
+                        commandLine("otool", "-l", binaryFile.absolutePath)
+                    }
+                    val currentMinOS = otoolOutput.standardOutput.asText.get()
+                        .lines()
+                        .firstOrNull { it.contains("minos") }
+                        ?.trim()
+                        ?.split(" ")
+                        ?.lastOrNull()
+                        ?: throw GradleException("Could not determine min OS version from binary")
+                    providers.exec {
+                        isIgnoreExitValue = true
                         commandLine(
                             "/usr/libexec/PlistBuddy",
                             "-c",
@@ -339,35 +335,25 @@ afterEvaluate {
     }
 }
 
-// Configure Dokka tasks uniformly
-// tasks.withType<DokkaTask>().configureEach {
-//     moduleName.set(currentModuleName)
-//     moduleVersion.set(rootProject.version.toString())
-// }
-
 mavenPublishing {
-    publishToMavenCentral()
+    val shouldAutoRelease = project.findProperty("autoRelease")?.toString()?.toBoolean() ?: false
+    publishToMavenCentral(automaticRelease = shouldAutoRelease)
     signAllPublications()
-
     coordinates(group.toString(), "apollo", rootProject.version.toString())
-
     pom {
         name.set("Identus Apollo")
         description.set("Collection of cryptographic methods used across Identus platform.")
         url.set("https://hyperledger-identus.github.io/docs/")
-
         organization {
             name.set("Hyperledger")
             url.set("https://www.hyperledger.org/")
         }
-
         licenses {
             license {
                 name.set("The Apache License, Version 2.0")
                 url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
             }
         }
-
         developers {
             developer {
                 id.set("hamada147")

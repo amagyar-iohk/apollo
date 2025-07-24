@@ -273,7 +273,8 @@ tasks.register("assembleRustLibs") {
 }
 
 mavenPublishing {
-    publishToMavenCentral()
+    val shouldAutoRelease = project.findProperty("autoRelease")?.toString()?.toBoolean() ?: false
+    publishToMavenCentral(automaticRelease = shouldAutoRelease)
     signAllPublications()
     coordinates(group.toString(), "bip32-ed25519", rootProject.version.toString())
     pom {

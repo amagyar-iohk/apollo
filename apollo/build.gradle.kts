@@ -265,7 +265,7 @@ tasks.named("jsNodeTest") {
 }
 
 /* NPM Publication Wasm */
-tasks.registering(Copy::class) {
+val npmBip32Wasm by tasks.registering(Copy::class) {
     group = "js-build"
     description = "Copy ed25519_bip32_wasm.js to npm publication directory."
     val buildRustWasmTaskProvider = project(":bip32-ed25519").tasks.named("buildRustWasm")

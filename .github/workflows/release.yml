@@ -45,7 +45,7 @@ jobs:
 
       - name: Validate Gradle Wrapper
         uses: gradle/actions/wrapper-validation@v4
-      
+
       - name: Install Java
         uses: actions/setup-java@v4
         with:
@@ -136,6 +136,7 @@ jobs:
 
       - name: Commit updated files and tag the release
         uses: stefanzweifel/git-auto-commit-action@v5
+        if: ${{ inputs.release_swift }}
         with:
           commit_message: |
             chore(release): v${{ github.event.inputs.version }}
